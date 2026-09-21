@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "authoring",
+      "source": {
+        "source": "local",
+        "path": "./.agents/packs/authoring"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "demo",
       "source": {
         "source": "local",
