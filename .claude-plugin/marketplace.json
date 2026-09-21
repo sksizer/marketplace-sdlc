@@ -10,6 +10,12 @@
       "source": "./.claude-plugin/packs/demo",
       "description": "A demonstration plugin: one skill, to prove the marketplace builds and installs.",
       "version": "0.1.0"
+    },
+    {
+      "name": "review",
+      "source": "./.claude-plugin/packs/review",
+      "description": "Skills for judging a change or a body of code before it merges.",
+      "version": "0.1.0"
     }
   ]
 }
