@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "codebase",
+      "source": {
+        "source": "local",
+        "path": "./.agents/packs/codebase"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "demo",
       "source": {
         "source": "local",
