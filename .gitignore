@@ -102,3 +102,8 @@ htmlcov/
 *.log
 tmp/
 .cache/
+
+# `agent-pants build` stages and backs up here before swapping each harness
+# tree into place, and removes it when the build ends. A crashed build leaves
+# it behind; it is never part of the marketplace.
+.agent-pants-stage/

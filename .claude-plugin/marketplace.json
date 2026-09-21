@@ -1,0 +1,15 @@
+{
+  "name": "sdlc",
+  "owner": {
+    "name": "sksizer"
+  },
+  "description": "SDLC plugins and skills sksizer publishes for coding agents.",
+  "plugins": [
+    {
+      "name": "demo",
+      "source": "./.claude-plugin/packs/demo",
+      "description": "A demonstration plugin: one skill, to prove the marketplace builds and installs.",
+      "version": "0.1.0"
+    }
+  ]
+}
