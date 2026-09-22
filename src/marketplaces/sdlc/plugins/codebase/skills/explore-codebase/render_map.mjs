@@ -30,6 +30,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 // ---------------------------------------------------------------------------
 // Text
@@ -86,10 +87,23 @@ function boxSvg(/** @type {Box} */ box, /** @type {number} */ x, /** @type {numb
 
 const boxHeight = (/** @type {Box} */ b) => (b.lines?.length ? 34 + b.lines.length * 16 : 44)
 
-/** Width a row of boxes needs, laid out evenly across `total`. */
-function rowLayout(/** @type {Box[]} */ boxes, /** @type {number} */ total, /** @type {number} */ gap) {
-  const w = (total - gap * (boxes.length - 1)) / boxes.length
-  return boxes.map((b, i) => ({ box: b, x: i * (w + gap), w }))
+/** Width a box needs before its own text would clip. */
+const boxWidth = (/** @type {Box} */ b) =>
+  Math.max(textWidth(b.title, 13), ...(b.lines ?? []).map((l) => textWidth(l, 11))) + 28
+
+/**
+ * Lays boxes evenly across a row at least `min` wide. Where the content does
+ * not fit, the row grows past `min` instead of clipping: the caller widens the
+ * viewBox and the whole diagram scales down together, which keeps the promise
+ * that a payload cannot produce an SVG that overflows its box.
+ */
+function rowLayout(/** @type {Box[]} */ boxes, /** @type {number} */ min, /** @type {number} */ gap) {
+  const even = (min - gap * (boxes.length - 1)) / boxes.length
+  const w = Math.max(even, ...boxes.map(boxWidth))
+  return {
+    cells: boxes.map((b, i) => ({ box: b, x: i * (w + gap), w })),
+    width: boxes.length * w + gap * (boxes.length - 1),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -102,8 +116,11 @@ const PAD = 16
 /** @returns {string} */
 function renderLayers(/** @type {Layers} */ d) {
   const gap = 20
-  const inner = W - PAD * 2
   const arrows = (d.arrows ?? 'down') === 'down'
+  // Widest row sets the diagram; every other row is then laid out to match it.
+  const inner = Math.max(...d.layers.map((l) => rowLayout(l.boxes, W - PAD * 2, gap).width))
+  const width = inner + PAD * 2
+  const rows = d.layers.map((l) => rowLayout(l.boxes, inner, gap))
   let y = PAD
   const parts = [ARROW_DEFS]
 
@@ -113,7 +130,7 @@ function renderLayers(/** @type {Layers} */ d) {
       y += 22
     }
     const h = Math.max(...layer.boxes.map(boxHeight))
-    for (const { box, x, w } of rowLayout(layer.boxes, inner, gap)) {
+    for (const { box, x, w } of rows[li].cells) {
       parts.push(boxSvg(box, PAD + x, y, w, h))
     }
     y += h
@@ -123,30 +140,36 @@ function renderLayers(/** @type {Layers} */ d) {
       const isBoundary = d.boundary && d.boundary.after === li
       if (isBoundary) {
         y += 18
-        parts.push(`<line x1="${PAD}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="var(--r-error)" stroke-width="1.5" stroke-dasharray="6 4"/>`)
+        parts.push(`<line x1="${PAD}" y1="${y}" x2="${width - PAD}" y2="${y}" stroke="var(--r-error)" stroke-width="1.5" stroke-dasharray="6 4"/>`)
         const label = /** @type {{after:number,label:string}} */ (d.boundary).label
         const lw = textWidth(label, 11.5) + 24
-        parts.push(`<rect x="${(W - lw) / 2}" y="${y - 12}" width="${lw}" height="24" rx="4" fill="var(--r-bg)"/>`)
-        parts.push(`<text x="${W / 2}" y="${y + 4}" text-anchor="middle" fill="var(--r-error)" font-size="11.5" font-family="var(--r-font)">${esc(label)}</text>`)
+        parts.push(`<rect x="${(width - lw) / 2}" y="${y - 12}" width="${lw}" height="24" rx="4" fill="var(--r-bg)"/>`)
+        parts.push(`<text x="${width / 2}" y="${y + 4}" text-anchor="middle" fill="var(--r-error)" font-size="11.5" font-family="var(--r-font)">${esc(label)}</text>`)
         y += 22
       } else if (arrows) {
-        parts.push(`<line x1="${W / 2}" y1="${y + 6}" x2="${W / 2}" y2="${y + 28}" stroke="var(--r-muted)" stroke-width="1.5" marker-end="url(#mp-arrow)"/>`)
+        parts.push(`<line x1="${width / 2}" y1="${y + 6}" x2="${width / 2}" y2="${y + 28}" stroke="var(--r-muted)" stroke-width="1.5" marker-end="url(#mp-arrow)"/>`)
         y += 34
       } else {
         y += 20
       }
     }
   })
-  return svgWrap(parts.join(''), y + PAD)
+  return svgWrap(parts.join(''), y + PAD, width)
 }
 
 /** @returns {string} */
 function renderPipeline(/** @type {Pipeline} */ d) {
   const gap = 34
-  const inner = W - PAD * 2
+  const outGap = 18
+  // Stages and outputs share one width, whichever of the two rows needs more.
+  const inner = Math.max(
+    rowLayout(d.stages, W - PAD * 2, gap).width,
+    d.outputs ? rowLayout(d.outputs.boxes, W - PAD * 2, outGap).width : 0,
+  )
+  const width = inner + PAD * 2
   const h = Math.max(...d.stages.map(boxHeight))
   const parts = [ARROW_DEFS]
-  const laid = rowLayout(d.stages, inner, gap)
+  const laid = rowLayout(d.stages, inner, gap).cells
   for (const { box, x, w } of laid) {
     parts.push(boxSvg(box, PAD + x, PAD, w, h))
   }
@@ -162,19 +185,23 @@ function renderPipeline(/** @type {Pipeline} */ d) {
     parts.push(`<text x="${PAD}" y="${y}" fill="var(--r-muted)" font-size="11.5" font-family="var(--r-font)">${esc(d.outputs.label)}</text>`)
     y += 14
     const oh = Math.max(...d.outputs.boxes.map(boxHeight))
-    for (const { box, x, w } of rowLayout(d.outputs.boxes, inner, 18)) {
+    for (const { box, x, w } of rowLayout(d.outputs.boxes, inner, outGap).cells) {
       parts.push(boxSvg(box, PAD + x, y, w, oh))
     }
     y += oh
   }
-  return svgWrap(parts.join(''), y + PAD)
+  return svgWrap(parts.join(''), y + PAD, width)
 }
 
 /** @returns {string} */
 function renderInventory(/** @type {Inventory} */ d) {
   const cols = d.columns ?? 5
-  const inner = W - PAD * 2
-  const colW = (inner - 28) / cols
+  // A column is as wide as the widest name (plus its note) needs, never less
+  // than an even share; the container grows to suit.
+  const cellW = (/** @type {{name:string,note?:string}} */ it) =>
+    textWidth(it.name, 11.5) + (it.note ? 8 + textWidth(it.note, 10) : 0) + 16
+  const colW = Math.max((W - PAD * 2 - 36) / cols, ...d.items.map(cellW))
+  const inner = 36 + colW * cols
   const rows = Math.ceil(d.items.length / cols)
   let top = PAD
   const parts = []
@@ -197,19 +224,20 @@ function renderInventory(/** @type {Inventory} */ d) {
       parts.push(`<text x="${x + textWidth(item.name, 11.5) + 8}" y="${y}" fill="var(--r-muted)" font-size="10" font-family="var(--r-font)">${esc(item.note)}</text>`)
     }
   })
-  return svgWrap(parts.join(''), top + bodyH + PAD)
+  return svgWrap(parts.join(''), top + bodyH + PAD, inner + PAD * 2)
 }
 
-const svgWrap = (/** @type {string} */ inner, /** @type {number} */ height, /** @type {string=} */ viewBox) =>
-  `<svg viewBox="${viewBox ?? `0 0 ${W} ${Math.round(height)}`}" role="img" font-family="var(--r-font-mono)">${inner}</svg>`
+const svgWrap = (/** @type {string} */ inner, /** @type {number} */ height,
+                 /** @type {number=} */ width, /** @type {string=} */ viewBox) =>
+  `<svg viewBox="${viewBox ?? `0 0 ${Math.round(width ?? W)} ${Math.round(height)}`}" role="img" font-family="var(--r-font-mono)">${inner}</svg>`
 
 /** @returns {string} */
-function renderDiagram(/** @type {Diagram} */ d) {
+export function renderDiagram(/** @type {Diagram} */ d) {
   switch (d.kind) {
     case 'layers': return renderLayers(d)
     case 'pipeline': return renderPipeline(d)
     case 'inventory': return renderInventory(d)
-    case 'raw': return svgWrap(d.svg, 0, d.viewBox)
+    case 'raw': return svgWrap(d.svg, 0, undefined, d.viewBox)
   }
 }
 
@@ -243,7 +271,7 @@ const DIAGRAM_KINDS = new Set(['layers', 'pipeline', 'inventory', 'raw'])
 const BLOCK_TYPES = new Set(['p', 'ul', 'table', 'panel', 'figure'])
 
 /** @param {unknown} payload @returns {MapPage} */
-function validate(payload) {
+export function validate(payload) {
   /** @type {string[]} */
   const errors = []
   const at = (/** @type {string} */ path, /** @type {string} */ msg) => errors.push(`${path}: ${msg}`)
@@ -296,7 +324,7 @@ function validate(payload) {
 // Page
 // ---------------------------------------------------------------------------
 
-const STYLE = `
+export const TOKENS = `
 :root {
   --r-font: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', sans-serif;
   --r-font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
@@ -319,6 +347,9 @@ const STYLE = `
   --r-accent-wash: #1e2740; --r-accent-line: #3c5490;
   --r-success: #5fcf8e; --r-warning: #e0b264; --r-error: #f2919d;
 }
+`
+
+const LAYOUT = `
 * { box-sizing: border-box; }
 body { margin:0; padding:0 16px; background:var(--r-bg); color:var(--r-text);
   font-family:var(--r-font); font-size:16px; line-height:1.65; }
@@ -375,7 +406,8 @@ main > h2:first-of-type { margin-top:34px; }
 }
 `
 
-/** @param {MapPage} page @returns {string} */
+const STYLE = TOKENS.trimEnd() + LAYOUT
+
 /** Highlights the entry for whichever section the reader is currently in. */
 const SPY = `
 const map = new Map([...document.querySelectorAll('.toc a')].map((a) => [a.hash.slice(1), a]))
@@ -404,6 +436,7 @@ const obs = new IntersectionObserver(
 for (const h of document.querySelectorAll('main > h2[id]')) obs.observe(h)
 `
 
+/** @param {MapPage} page @returns {string} */
 export function renderMapPage(page) {
   const used = new Set()
   const sections = page.sections.map((s) => ({ ...s, id: slug(s.heading, used) }))
@@ -445,11 +478,14 @@ ${toc ? `<script>${SPY}</script>` : ''}
 `
 }
 
-const [, , input, output] = process.argv
-if (!input || !output) {
-  console.error('usage: node render_map.mjs <payload.json> <out.html>')
-  process.exit(2)
+// Only when run as a command; importing this file must not render anything.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [, , input, output] = process.argv
+  if (!input || !output) {
+    console.error('usage: node render_map.mjs <payload.json> <out.html>')
+    process.exit(2)
+  }
+  const page = validate(JSON.parse(readFileSync(input, 'utf8')))
+  writeFileSync(output, renderMapPage(page))
+  console.error(`MAP-RENDER ok sections=${page.sections.length} out=${output}`)
 }
-const page = validate(JSON.parse(readFileSync(input, 'utf8')))
-writeFileSync(output, renderMapPage(page))
-console.error(`MAP-RENDER ok sections=${page.sections.length} out=${output}`)
