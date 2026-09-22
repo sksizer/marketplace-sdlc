@@ -23,9 +23,12 @@ first rung that can carry it:
    - **Files and modules.** The filename is the first thing a reader greps and
      the last thing they read. A module named for its contents needs no header
      comment announcing them.
-   - **Packages and directories.** The boundary's name states what is inside and,
-     by omission, what is not. A `utils` or `common` that needs a comment
-     explaining its scope has no scope.
+   - **Packages and directories.** The boundary's name states what is inside
+     and, by omission, what is not. A small `utils` holding genuinely
+     miscellaneous helpers is fine — not every function earns a category. What
+     the name has to keep out is the `utils` that grew a subsystem: once a
+     reader needs a comment to learn what lives there, the directory is a
+     second home for something that deserves its own name.
 2. **The signature and the types.** Parameter names, a union instead of a string,
    a non-null return instead of a documented "never null", an options object
    instead of three positional booleans. A comment describing what a type already
@@ -42,6 +45,13 @@ first rung that can carry it:
    fact belongs in that parameter's tag, not in an inline comment beside the
    argument.
 4. **An inline comment.** Everything left over — and only what is left over.
+
+A name cannot carry an explanation, only a label. When a package or module
+needs one — how its pieces fit, the protocol its callers follow — that is
+shared documentation, and the code points at it rather than restating it. See
+*Duplication becomes a reference* below for the reference form, and *A concept
+explained in code may belong in documentation* for when a block has outgrown
+the file it sits in.
 
 ### What earns an inline comment
 
@@ -81,7 +91,11 @@ is kept or rewritten obeys five rules:
 - **Bullets over long prose.** Where a block legitimately carries several points
   — a doc annotation with conditions, a module header — write them as a list. A
   reader scans a list; they have to parse a paragraph to find the one line they
-  came for.
+  came for. Prose stays where the narrative is the point: reasoning that builds,
+  where each step depends on the one before and the conclusion does not stand
+  without them. Split that into bullets and the argument becomes a set of
+  assertions the reader has to reassemble. A list is for facts that are true
+  independently; a paragraph is for a case that has to be made.
 
 ### A comment does not pin volatile project state
 
