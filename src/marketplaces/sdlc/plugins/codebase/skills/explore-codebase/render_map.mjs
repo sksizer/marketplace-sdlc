@@ -42,6 +42,15 @@ const esc = (/** @type {string} */ s) =>
 const inline = (/** @type {string} */ s) =>
   esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
 
+/** A stable anchor for a heading, deduped against those already used. */
+function slug(/** @type {string} */ s, /** @type {Set<string>} */ used) {
+  const base = s.toLowerCase().replace(/[`*]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section'
+  let out = base
+  for (let n = 2; used.has(out); n++) out = `${base}-${n}`
+  used.add(out)
+  return out
+}
+
 const ACCENT = { none: 'var(--r-border)', good: 'var(--r-success)', warn: 'var(--r-warning)', bad: 'var(--r-error)' }
 const stroke = (/** @type {Accent=} */ a) => ACCENT[a ?? 'none'] ?? ACCENT.none
 
@@ -311,11 +320,10 @@ const STYLE = `
   --r-success: #5fcf8e; --r-warning: #e0b264; --r-error: #f2919d;
 }
 * { box-sizing: border-box; }
-body { margin:0; padding:48px 16px 96px; background:var(--r-bg); color:var(--r-text);
+body { margin:0; padding:0 16px; background:var(--r-bg); color:var(--r-text);
   font-family:var(--r-font); font-size:16px; line-height:1.65; }
-main { max-width:900px; margin:0 auto; }
 h1 { color:var(--r-heading); font-size:30px; margin:0 0 6px; letter-spacing:-0.01em; }
-h2 { color:var(--r-heading); font-size:21px; margin:52px 0 12px; letter-spacing:-0.005em; }
+h2 { color:var(--r-heading); font-size:21px; margin:52px 0 12px; scroll-margin-top:20px; letter-spacing:-0.005em; }
 h3 { color:var(--r-heading); font-size:15.5px; margin:0 0 8px; }
 .lede { color:var(--r-muted); font-size:17px; margin:0 0 6px; }
 .meta { color:var(--r-muted); font-size:13px; font-family:var(--r-font-mono); margin-bottom:36px; }
@@ -333,14 +341,85 @@ ul { margin:0 0 15px; padding-left:21px; } li { margin-bottom:6px; }
   border-radius:6px; padding:14px 18px; margin:22px 0; }
 .panel > :last-child { margin-bottom:0; }
 .cite { font-family:var(--r-font-mono); font-size:12.5px; color:var(--r-muted); }
-@media (max-width:620px) { body { padding:32px 16px 64px; } h1 { font-size:25px; } }
+@media (max-width:620px) { h1 { font-size:25px; } }
+
+/* Two columns: a table of contents that holds its place, and the page. */
+.shell { display:grid; grid-template-columns:232px minmax(0,1fr); gap:44px;
+  max-width:1210px; margin:0 auto; align-items:start; }
+.shell.no-toc { display:block; max-width:900px; }
+.toc { position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto;
+  padding:48px 0 40px; font-size:13.5px; line-height:1.5;
+  scrollbar-width:thin; scrollbar-color:var(--r-border) transparent; }
+.toc::-webkit-scrollbar { width:8px; }
+.toc::-webkit-scrollbar-thumb { background:var(--r-border); border-radius:4px; }
+.toc-label { color:var(--r-muted); font-size:11px; letter-spacing:0.07em;
+  text-transform:uppercase; margin:0 0 10px; }
+.toc ol { list-style:none; margin:0; padding:0; border-left:1px solid var(--r-border); }
+.toc li { margin:0; }
+.toc a { display:block; padding:5px 12px; margin-left:-1px; color:var(--r-muted);
+  text-decoration:none; border-left:2px solid transparent; }
+.toc a:hover { color:var(--r-heading); }
+.toc a.is-current { color:var(--r-heading); border-left-color:var(--r-accent-line); }
+.toc code { background:none; padding:0; font-size:0.92em; }
+main { padding:48px 0 96px; }
+main > h2:first-of-type { margin-top:34px; }
+
+/* One column below the split: the contents lead the page instead of flanking it. */
+@media (max-width:900px) {
+  .shell { display:block; max-width:900px; }
+  .toc { position:static; max-height:31vh; padding:8px 0; }
+  .toc ol { border-left:none; display:flex; flex-wrap:wrap; gap:2px 6px; }
+  .toc a { padding:3px 9px; border-left:none; border-radius:4px; background:var(--r-surface); }
+  .toc a.is-current { background:var(--r-accent-wash); }
+  main { padding:24px 0 64px; }
+}
 `
 
 /** @param {MapPage} page @returns {string} */
+/** Highlights the entry for whichever section the reader is currently in. */
+const SPY = `
+const map = new Map([...document.querySelectorAll('.toc a')].map((a) => [a.hash.slice(1), a]))
+let current = null
+const mark = (a) => {
+  if (a === current) return
+  if (current) current.classList.remove('is-current')
+  current = a
+  if (!a) return
+  a.classList.add('is-current')
+  // Keep the marked entry inside the rail's own scroll, without moving the page.
+  const nav = a.closest('.toc')
+  if (nav.scrollHeight <= nav.clientHeight) return
+  const nr = nav.getBoundingClientRect()
+  const ar = a.getBoundingClientRect()
+  if (ar.top < nr.top + 8) nav.scrollTop += ar.top - nr.top - 8
+  else if (ar.bottom > nr.bottom - 8) nav.scrollTop += ar.bottom - nr.bottom + 8
+}
+const obs = new IntersectionObserver(
+  (entries) => {
+    const hit = entries.find((e) => e.isIntersecting)
+    if (hit) mark(map.get(hit.target.id))
+  },
+  { rootMargin: '0px 0px -72% 0px' },
+)
+for (const h of document.querySelectorAll('main > h2[id]')) obs.observe(h)
+`
+
 export function renderMapPage(page) {
-  const body = page.sections
-    .map((s) => `<h2>${inline(s.heading)}</h2>\n${s.blocks.map(renderBlock).join('\n')}`)
+  const used = new Set()
+  const sections = page.sections.map((s) => ({ ...s, id: slug(s.heading, used) }))
+  const body = sections
+    .map((s) => `<h2 id="${s.id}">${inline(s.heading)}</h2>\n${s.blocks.map(renderBlock).join('\n')}`)
     .join('\n\n')
+  // One or two headings navigate fine on their own; a contents rail would only crowd them.
+  const toc =
+    sections.length < 3
+      ? ''
+      : `<nav class="toc" aria-label="Contents">
+<p class="toc-label">Contents</p>
+<ol>
+${sections.map((s) => `<li><a href="#${s.id}">${inline(s.heading)}</a></li>`).join('\n')}
+</ol>
+</nav>`
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -350,6 +429,8 @@ export function renderMapPage(page) {
 <style>${STYLE}</style>
 </head>
 <body>
+<div class="shell${toc ? '' : ' no-toc'}">
+${toc}
 <main>
 <h1>${esc(page.title)}</h1>
 <p class="lede">${inline(page.lede)}</p>
@@ -357,6 +438,8 @@ ${page.meta ? `<p class="meta">${esc(page.meta)}</p>` : ''}
 
 ${body}
 </main>
+</div>
+${toc ? `<script>${SPY}</script>` : ''}
 </body>
 </html>
 `

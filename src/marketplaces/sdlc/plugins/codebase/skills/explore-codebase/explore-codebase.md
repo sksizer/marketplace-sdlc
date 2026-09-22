@@ -150,6 +150,10 @@ Three diagram kinds, chosen by what the shape actually is:
 | `pipeline` | Ordered stages left to right, optionally fanning out to terminal outputs — traced flows. |
 | `inventory` | A labelled container holding a grid of names — module rosters, anything whose point is membership. |
 
+Section headings become a fixed contents rail down the left of the page, which scrolls on its own
+and tracks the section you are reading. It appears once a page has three sections. Write headings
+that read as a table of contents — the rail is the only navigation a long map gets.
+
 A fourth, `raw`, takes hand-authored SVG. It exists so an unusual shape is possible, not so it is
 easy: raw markup skips every guarantee above. Prefer a kind, and prefer proposing a new kind over
 reaching for `raw` twice.
