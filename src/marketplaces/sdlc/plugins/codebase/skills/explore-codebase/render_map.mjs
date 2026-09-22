@@ -19,7 +19,10 @@
  * @typedef {{ kind:'inventory', label:string, sublabel?:string, columns?:number,
  *             items:{name:string,note?:string,accent?:Accent}[] }} Inventory
  * @typedef {{ kind:'raw', svg:string, viewBox:string }} Raw
- * @typedef {Layers|Pipeline|Inventory|Raw} Diagram
+ * @typedef {{ title:string, sublabel?:string, accent?:Accent, columns?:number,
+ *             items?:{name:string,note?:string,accent?:Accent}[], groups?:Group[] }} Group
+ * @typedef {{ kind:'containment', columns?:number, groups: Group[] }} Containment
+ * @typedef {Layers|Pipeline|Inventory|Containment|Raw} Diagram
  * @typedef {{type:'p',text:string}
  *          |{type:'ul',items:string[]}
  *          |{type:'table',head:string[],rows:string[][]}
@@ -227,6 +230,116 @@ function renderInventory(/** @type {Inventory} */ d) {
   return svgWrap(parts.join(''), top + bodyH + PAD, inner + PAD * 2)
 }
 
+// --- containment: boxes inside boxes ---------------------------------------
+
+const G_PAD = 14 // inner padding on every group box
+const G_GAP = 12 // between sibling groups
+const ITEM_H = 22
+/** Fill per nesting depth, so a child reads as sitting inside its parent. */
+const NEST_FILL = ['var(--r-surface)', 'var(--r-card)', 'var(--r-chip)']
+
+const headHeight = (/** @type {Group} */ g) => (g.sublabel ? 44 : 26)
+
+const itemWidth = (/** @type {{name:string,note?:string}} */ it) =>
+  textWidth(it.name, 11.5) + (it.note ? 8 + textWidth(it.note, 10) : 0) + 16
+
+/**
+ * Narrowest this group can be drawn without clipping anything inside it. Every
+ * caller keeps a group at or above this width, which is what makes the grid
+ * arithmetic below safe at any depth.
+ */
+function groupMinWidth(/** @type {Group} */ g) {
+  const head = Math.max(textWidth(g.title, 13.5), g.sublabel ? textWidth(g.sublabel, 11) : 0)
+  let body
+  if (g.items) {
+    body = Math.max(...g.items.map(itemWidth))
+  } else {
+    const kids = /** @type {Group[]} */ (g.groups)
+    const c = Math.min(g.columns ?? 2, kids.length)
+    body = Math.max(...kids.map(groupMinWidth)) * c + G_GAP * (c - 1)
+  }
+  return Math.max(head, body) + G_PAD * 2
+}
+
+/** How a group's contents divide up at width `w`. */
+function groupGrid(/** @type {Group} */ g, /** @type {number} */ w) {
+  const inner = w - G_PAD * 2
+  if (g.items) {
+    const cols = Math.max(1, Math.floor(inner / Math.max(...g.items.map(itemWidth))))
+    return { cols, cellW: inner / cols }
+  }
+  const kids = /** @type {Group[]} */ (g.groups)
+  const cols = Math.min(g.columns ?? 2, kids.length)
+  return { cols, cellW: (inner - G_GAP * (cols - 1)) / cols }
+}
+
+/** @returns {number} */
+function groupHeight(/** @type {Group} */ g, /** @type {number} */ w) {
+  const { cols, cellW } = groupGrid(g, w)
+  if (g.items) return headHeight(g) + Math.ceil(g.items.length / cols) * ITEM_H + G_PAD
+  const kids = /** @type {Group[]} */ (g.groups)
+  let h = headHeight(g)
+  for (let i = 0; i < kids.length; i += cols) {
+    h += (i ? G_GAP : 0) + Math.max(...kids.slice(i, i + cols).map((k) => groupHeight(k, cellW)))
+  }
+  return h + G_PAD
+}
+
+/** @returns {string} */
+function groupSvg(/** @type {Group} */ g, /** @type {number} */ x, /** @type {number} */ y,
+                  /** @type {number} */ w, /** @type {number} */ depth, /** @type {number=} */ forceH) {
+  const h = forceH ?? groupHeight(g, w)
+  const accented = g.accent && g.accent !== 'none'
+  const parts = [
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${NEST_FILL[Math.min(depth, 2)]}" stroke="${stroke(g.accent)}" stroke-width="${accented ? 1.5 : 1}"/>`,
+    `<text x="${x + G_PAD}" y="${y + 19}" fill="var(--r-heading)" font-size="13.5">${esc(g.title)}</text>`,
+  ]
+  if (g.sublabel) {
+    parts.push(`<text x="${x + G_PAD}" y="${y + 36}" fill="var(--r-muted)" font-size="11" font-family="var(--r-font)">${esc(g.sublabel)}</text>`)
+  }
+  const top = y + headHeight(g)
+  const { cols, cellW } = groupGrid(g, w)
+  if (g.items) {
+    g.items.forEach((it, i) => {
+      const ix = x + G_PAD + (i % cols) * cellW
+      const iy = top + Math.floor(i / cols) * ITEM_H + 12
+      const fill = it.accent && it.accent !== 'none' ? stroke(it.accent) : 'var(--r-heading)'
+      parts.push(`<text x="${ix}" y="${iy}" fill="${fill}" font-size="11.5">${esc(it.name)}</text>`)
+      if (it.note) {
+        parts.push(`<text x="${ix + textWidth(it.name, 11.5) + 8}" y="${iy}" fill="var(--r-muted)" font-size="10" font-family="var(--r-font)">${esc(it.note)}</text>`)
+      }
+    })
+  } else {
+    const kids = /** @type {Group[]} */ (g.groups)
+    let cy = top
+    for (let i = 0; i < kids.length; i += cols) {
+      const row = kids.slice(i, i + cols)
+      const rh = Math.max(...row.map((k) => groupHeight(k, cellW)))
+      row.forEach((k, j) => parts.push(groupSvg(k, x + G_PAD + j * (cellW + G_GAP), cy, cellW, depth + 1, rh)))
+      cy += rh + G_GAP
+    }
+  }
+  return parts.join('')
+}
+
+/** @returns {string} */
+function renderContainment(/** @type {Containment} */ d) {
+  const cols = Math.min(d.columns ?? 2, d.groups.length)
+  const need = Math.max(...d.groups.map(groupMinWidth)) * cols + G_GAP * (cols - 1)
+  const inner = Math.max(W - PAD * 2, need)
+  const width = inner + PAD * 2
+  const cellW = (inner - G_GAP * (cols - 1)) / cols
+  const parts = []
+  let y = PAD
+  for (let i = 0; i < d.groups.length; i += cols) {
+    const row = d.groups.slice(i, i + cols)
+    const rh = Math.max(...row.map((g) => groupHeight(g, cellW)))
+    row.forEach((g, j) => parts.push(groupSvg(g, PAD + j * (cellW + G_GAP), y, cellW, 0, rh)))
+    y += rh + G_GAP
+  }
+  return svgWrap(parts.join(''), y - G_GAP + PAD, width)
+}
+
 const svgWrap = (/** @type {string} */ inner, /** @type {number} */ height,
                  /** @type {number=} */ width, /** @type {string=} */ viewBox) =>
   `<svg viewBox="${viewBox ?? `0 0 ${Math.round(width ?? W)} ${Math.round(height)}`}" role="img" font-family="var(--r-font-mono)">${inner}</svg>`
@@ -237,6 +350,7 @@ export function renderDiagram(/** @type {Diagram} */ d) {
     case 'layers': return renderLayers(d)
     case 'pipeline': return renderPipeline(d)
     case 'inventory': return renderInventory(d)
+    case 'containment': return renderContainment(d)
     case 'raw': return svgWrap(d.svg, 0, undefined, d.viewBox)
   }
 }
@@ -267,7 +381,7 @@ function renderBlock(/** @type {Block} */ b) {
 // Validation — enough to fail loudly on the mistakes that actually happen
 // ---------------------------------------------------------------------------
 
-const DIAGRAM_KINDS = new Set(['layers', 'pipeline', 'inventory', 'raw'])
+const DIAGRAM_KINDS = new Set(['layers', 'pipeline', 'inventory', 'containment', 'raw'])
 const BLOCK_TYPES = new Set(['p', 'ul', 'table', 'panel', 'figure'])
 
 /** @param {unknown} payload @returns {MapPage} */
@@ -306,6 +420,22 @@ export function validate(payload) {
       }
       if (d.kind === 'pipeline' && !d.stages?.length) at(`${path}.diagram.stages`, 'needs at least one stage')
       if (d.kind === 'inventory' && !d.items?.length) at(`${path}.diagram.items`, 'needs at least one item')
+      if (d.kind === 'containment') {
+        /** A group holds names or more groups, never both, and nests 3 deep at most. */
+        const checkGroup = (/** @type {any} */ g, /** @type {string} */ p, /** @type {number} */ depth) => {
+          if (typeof g?.title !== 'string') return at(p, 'needs a title')
+          const hasItems = !!g.items?.length
+          const hasGroups = !!g.groups?.length
+          if (hasItems === hasGroups) return at(p, 'needs either items or groups, not both and not neither')
+          if (depth > 3) return at(p, 'nests deeper than 3 levels')
+          if (hasGroups) g.groups.forEach((/** @type {any} */ k, /** @type {number} */ i) => checkGroup(k, `${p}.groups[${i}]`, depth + 1))
+          if (hasItems) g.items.forEach((/** @type {any} */ it, /** @type {number} */ i) => {
+            if (typeof it?.name !== 'string') at(`${p}.items[${i}]`, 'needs a name')
+          })
+        }
+        if (!d.groups?.length) at(`${path}.diagram.groups`, 'needs at least one group')
+        d.groups?.forEach((/** @type {any} */ g, /** @type {number} */ i) => checkGroup(g, `${path}.diagram.groups[${i}]`, 1))
+      }
       if (d.kind === 'raw' && typeof d.viewBox !== 'string') at(`${path}.diagram.viewBox`, 'raw needs an explicit viewBox')
     }
   }

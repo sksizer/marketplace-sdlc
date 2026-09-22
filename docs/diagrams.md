@@ -37,9 +37,9 @@ keeps its position while the page scrolls, scrolls on its own once it outgrows
 the window, and marks the section in view. It appears once a page has three
 sections.
 
-## The three diagram kinds
+## The four diagram kinds
 
-Each `figure` holds one diagram. There are three kinds, chosen by what the
+Each `figure` holds one diagram. There are four kinds, chosen by what the
 shape actually is rather than by how it should look.
 
 ### `layers` — tiers separated by a seam
@@ -120,12 +120,51 @@ finding: which modules a crate has, which commands a CLI exposes.
 
 Full payload: [`examples/inventory.json`](examples/inventory.json).
 
+### `containment` — what holds what
+
+Boxes inside boxes, up to three levels deep. A group holds either a roster of
+names or more groups, never both. Reach for it when the nesting is the
+finding: which unit owns which modules, and which of those everything else
+depends on.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/containment-dark.svg">
+  <img alt="Two outer boxes, 'agent-adapt-core' and 'hosts', each holding nested boxes of module names; the 'seams' group is outlined in red" src="images/containment-light.svg" width="880">
+</picture>
+
+```jsonc
+{
+  "kind": "containment",
+  "columns": 2,
+  "groups": [
+    {
+      "title": "agent-adapt-core",
+      "sublabel": "21 modules, no I/O of its own",
+      "columns": 1,
+      "groups": [
+        { "title": "content", "items": [{ "name": "vault" }, { "name": "scan" }] },
+        { "title": "seams", "accent": "bad", "items": [{ "name": "vfs", "note": "the I/O trait" }] }
+      ]
+    }
+  ]
+}
+```
+
+Group by what the modules do, not by the folders they sit in. If the groups
+end up named after directories and holding exactly their contents, the diagram
+is a directory tree and should be dropped — `ls` already told the reader that.
+
+Depth is capped at three. A roster fills the width it is given, so `columns`
+only controls how many child *groups* sit side by side.
+
+Full payload: [`examples/containment.json`](examples/containment.json).
+
 ### `raw` — the escape hatch
 
 `raw` takes hand-authored SVG and a viewBox. It exists so an unusual shape is
 possible, not so it is easy: raw markup skips validation, layout and the
-overflow guarantee. Prefer one of the three kinds. If you reach for `raw` a
-second time, propose a fourth kind instead.
+overflow guarantee. Prefer one of the four kinds. If you reach for `raw` a
+second time, propose a fifth kind instead.
 
 ## Accents
 
@@ -138,6 +177,9 @@ values and they carry meaning, not decoration:
 | `good` | This is the healthy path, or the thing that works. |
 | `warn` | Worth knowing about before you touch it. |
 | `bad` | The risk. Where the bugs live, or what breaks if you change it. |
+
+A `containment` group takes an accent too, which outlines the whole group
+rather than one name.
 
 Accent sparingly. A diagram where everything is accented says nothing.
 
