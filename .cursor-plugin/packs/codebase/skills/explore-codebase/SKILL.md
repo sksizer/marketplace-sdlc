@@ -1,7 +1,7 @@
 ---
 name: explore-codebase
 description: |
-  Systematic method for understanding an unfamiliar codebase: getting oriented in a new repo, locating where something is implemented, tracing how a feature or request flows end to end, and building an accurate mental model before answering questions or making changes. Use whenever you're dropped into a repo or the user asks things like "how does X work here", "where is Y handled", "how is this project structured", "help me understand this codebase", "onboard me to this code", "find where Z is implemented", or "explore this repo and write up notes" — or before editing code you haven't read yet. Can optionally save the resulting map as a markdown file or a linked Obsidian-style vault in a temp location.
+  Systematic method for understanding an unfamiliar codebase: getting oriented in a new repo, locating where something is implemented, tracing how a feature or request flows end to end, and building an accurate mental model before answering questions or making changes. Use whenever you're dropped into a repo or the user asks things like "how does X work here", "where is Y handled", "how is this project structured", "help me understand this codebase", "onboard me to this code", "find where Z is implemented", or "explore this repo and write up notes" — or before editing code you haven't read yet. Can optionally save the resulting map as a markdown file, a linked Obsidian-style vault, or a self-contained HTML page carrying diagrams of the structure it found.
 allowed-tools: Read Glob Grep Shell Agent Write
 ---
 
@@ -91,7 +91,7 @@ Keep it tight and link to specifics with `path:line` rather than pasting large b
 
 When the user asks for a file, or the codebase is large enough that the map won't sit comfortably in
 chat, write the findings to a fresh temp directory (e.g. `/tmp/codebase-map-<repo>/`) and tell the
-user the path. Two formats:
+user the path. Three formats:
 
 **Single markdown file** (`<repo>-map.md`) — the default. The map structure above as one document
 with a short table of contents. Keep `path:line` references as inline code so they stay greppable.
@@ -109,6 +109,31 @@ major area/flow plus an index, connected with `[[wikilinks]]`:
 
 One idea per note is what makes the graph useful — keep each note focused and link generously rather
 than writing long notes.
+
+**HTML page with diagrams** (`<repo>-map.html`) — when the structure *is* the finding: a layered
+architecture, a pipeline with stages, a dependency graph, a boundary that cuts across modules. Ask
+for it with `--html`, or offer it when you notice you are describing a shape in prose that a picture
+would settle.
+
+Carry the same map structure as the markdown file, with diagrams where they earn their place:
+
+- **One self-contained file.** Inline SVG, inline CSS, no external assets, no build step. It has to
+  survive being emailed or opened from a temp directory with no network.
+- **Draw the mechanism, not the directory tree.** A picture of the folder layout tells the reader
+  what `ls` already told them. Draw the thing prose is bad at: where control flows, which boundary
+  separates what, what is translated as it crosses a stage. If a diagram would only restate a list,
+  write the list.
+- **One diagram per mechanism**, each with a caption saying what it shows and a `path:line` for
+  where to verify it.
+- **Cite everything.** Every structural claim on the page carries a `path:line`, the same discipline
+  as in chat. A diagram is an assertion about the code and is held to the same standard.
+- **Legible in both themes.** Define colors as tokens on `:root`, redefine them under
+  `@media (prefers-color-scheme: dark)`, and give `body` an explicit background. Never rely on a
+  default white page behind an SVG whose strokes are dark.
+- **Readable at phone width.** Give each SVG a `viewBox` and `width: 100%; height: auto` rather than
+  fixed pixel dimensions.
+
+Diagrams are the expensive part of this format. Two that show real mechanism beat six that decorate.
 
 ## Anti-patterns
 
