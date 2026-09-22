@@ -8,6 +8,12 @@
   },
   "plugins": [
     {
+      "name": "authoring",
+      "source": ".cursor-plugin/packs/authoring",
+      "description": "Skills for writing and maintaining documents alongside the people who own them.",
+      "version": "0.1.0"
+    },
+    {
       "name": "codebase",
       "source": ".cursor-plugin/packs/codebase",
       "description": "Skills for understanding and improving an unfamiliar body of code.",
@@ -17,6 +23,12 @@
       "name": "demo",
       "source": ".cursor-plugin/packs/demo",
       "description": "A demonstration plugin: one skill, to prove the marketplace builds and installs.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "review",
+      "source": ".cursor-plugin/packs/review",
+      "description": "Skills for judging a change or a body of code before it merges.",
       "version": "0.1.0"
     }
   ]

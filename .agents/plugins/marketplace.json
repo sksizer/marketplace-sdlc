@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "authoring",
+      "source": {
+        "source": "local",
+        "path": "./.agents/packs/authoring"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "codebase",
       "source": {
         "source": "local",
@@ -21,6 +33,18 @@
       "source": {
         "source": "local",
         "path": "./.agents/packs/demo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "review",
+      "source": {
+        "source": "local",
+        "path": "./.agents/packs/review"
       },
       "policy": {
         "installation": "AVAILABLE",
