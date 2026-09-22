@@ -45,9 +45,24 @@ code-review pass applies them to the comments in a diff.
 A fact about code has exactly one right home. Work down this list and stop at the
 first rung that can carry it:
 
-1. **The identifier.** A function, variable, type, or constant whose name states
-   the fact needs no comment stating it. `// retry three times` above
-   `const n = 3` is `const MAX_RETRIES = 3`.
+1. **The name.** A name that states the fact needs no comment stating it. This
+   rung is not just the local identifier — it runs all the way up, and the
+   higher the level, the more readers a good name serves:
+   - **Variables and constants.** `// retry three times` above `const n = 3` is
+     `const MAX_RETRIES = 3`.
+   - **Functions and methods.** A verb phrase naming the effect and the result.
+     A comment that summarises the body is a rename waiting to happen.
+   - **Types, fields, and enum members.** `Status.PendingReview` needs no
+     comment saying what the state means; `status: string` plus a comment
+     listing the values does.
+   - **Classes.** The noun says what the thing *is* and what it owns. A class
+     that needs a comment to say what belongs in it is usually two classes.
+   - **Files and modules.** The filename is the first thing a reader greps and
+     the last thing they read. A module named for its contents needs no header
+     comment announcing them.
+   - **Packages and directories.** The boundary's name states what is inside and,
+     by omission, what is not. A `utils` or `common` that needs a comment
+     explaining its scope has no scope.
 2. **The signature and the types.** Parameter names, a union instead of a string,
    a non-null return instead of a documented "never null", an options object
    instead of three positional booleans. A comment describing what a type already
@@ -88,7 +103,7 @@ other project measurement that nothing keeps true.
 ### How a kept comment reads
 
 A comment that earns its place still has to be worth reading. A comment that
-is kept or rewritten obeys four rules:
+is kept or rewritten obeys five rules:
 
 - **Short.** One or two sentences. A comment that needs a paragraph is usually a
   fact with a home further down the ladder, or one that belongs in documentation.
@@ -100,6 +115,10 @@ is kept or rewritten obeys four rules:
   "Careful here!" and "this is tricky" are not; they warn without saying what of.
 - **One idea per comment.** Two unrelated facts stacked in one block are two
   comments, each next to the code it is about.
+- **Bullets over long prose.** Where a block legitimately carries several points
+  — a doc annotation with conditions, a module header — write them as a list. A
+  reader scans a list; they have to parse a paragraph to find the one line they
+  came for.
 
 ### A comment does not pin volatile project state
 
