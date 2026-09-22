@@ -1,0 +1,15 @@
+{
+  "name": "review",
+  "version": "0.1.0",
+  "description": "Skills for judging a change or a body of code before it merges.",
+  "author": {
+    "name": "sksizer"
+  },
+  "license": "UNLICENSED",
+  "keywords": [],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "review",
+    "category": "Productivity"
+  }
+}

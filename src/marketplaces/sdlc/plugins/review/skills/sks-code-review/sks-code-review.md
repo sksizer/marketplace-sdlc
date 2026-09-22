@@ -1,0 +1,92 @@
+---
+name: sks-code-review
+description: 'Shell out to a headless external agent — codex by default, claude on request — for a code review of the current branch against the upstream default branch: potential errors, cleanup areas, duplication, and opportunities to better use or grow our library set.'
+allowed-tools:
+- Bash
+- Read
+trigger: /sks-code-review
+ap-kind: skill
+ap-plugin: review
+---
+
+# sks-code-review — headless external review of the current branch
+
+Run an independent agent over this repo's working tree and relay its
+review. The reviewer is a separate process with its own model and its own
+eyes; your job is to aim it correctly, wait, and present its findings —
+not to review the code yourself.
+
+## 1. Resolve the review target
+
+- Base: the upstream default branch —
+  `git symbolic-ref refs/remotes/origin/HEAD --short` (strip the
+  `origin/` prefix); fall back to `main` if unset. Fetch first
+  (`git fetch origin`) so the base is current.
+- Subject: the branch at the current working directory. Run the reviewer
+  FROM the directory the user is in (a worktree reviews its own branch).
+- If the current branch IS the default branch and the tree is clean,
+  say there is nothing to review and stop.
+
+## 2. The review brief
+
+Both engines get the same brief as their whole prompt. Open it by naming
+the subject and base explicitly — "You are reviewing the branch checked
+out in this directory against `<base>`; use `git diff <base>...HEAD` and
+`git log <base>..HEAD`, and read surrounding files as needed" — then,
+verbatim in spirit:
+
+> Report, in order of severity:
+>
+> 1. Potential errors — bugs, unhandled failure paths, race conditions,
+>    contract violations.
+> 2. Cleanup areas — dead code, stale comments, naming drift,
+>    inconsistencies with the surrounding code's conventions.
+> 3. Duplication — logic or strings this change repeats that exist (or
+>    now exist twice) elsewhere in the repo; name the canonical home.
+> 4. Library opportunities — places this change hand-rolls something an
+>    existing package in this repo already provides (look for a library
+>    roster in the docs and for a shared-package directory), and changes
+>    general enough that they should be PROMOTED into a shared package
+>    instead of living where they are.
+> Cite file:line for every finding. Only report findings you are
+> confident survive a careful re-read; say "no findings" for any empty
+> category rather than padding.
+
+## 3. Run the reviewer (headless)
+
+**codex (default):**
+
+```sh
+codex exec -s read-only "<brief>"
+```
+
+The brief must therefore say, up front, which branch and base to diff
+(`git diff <base>...HEAD`) — `codex exec review --base` exists but
+rejects custom instructions, so the general `exec` with a self-contained
+brief is the shape that carries ours. `-s read-only` goes on `exec`,
+before any prompt.
+
+**claude (when the user asks for it — note the different command):**
+
+```sh
+claude -p --permission-mode plan "<brief, prefixed with: Review the changes on this branch against <base>.>"
+```
+
+Notes for either engine:
+
+- Run in the background or with a generous timeout (≥ 10 minutes) —
+  reviews of large branches are slow; do not kill a run that is merely
+  quiet.
+- Read-only on purpose: the reviewer must never edit the tree. Never add
+  bypass/danger flags.
+- If the chosen CLI is not installed, say so and name the other engine
+  as the fallback rather than improvising a review yourself.
+
+## 4. Relay
+
+Present the reviewer's findings organized under the four brief headings,
+each with its file:line citations, and say which engine reviewed and
+against which base. Do not silently merge in findings of your own; if you
+noticed something the reviewer missed, add it under a clearly separated
+"additional observations (not from the reviewer)" note. Apply nothing —
+this skill reports; fixing is a separate instruction.
