@@ -76,7 +76,7 @@ other project measurement that nothing keeps true.
 ### How a kept comment reads
 
 A comment that earns its place still has to be worth reading. A comment that
-is kept or rewritten obeys five rules:
+is kept or rewritten obeys these rules:
 
 - **Short.** One or two sentences. A comment that needs a paragraph is usually a
   fact with a home further down the ladder, or one that belongs in documentation.

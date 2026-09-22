@@ -113,7 +113,7 @@ other project measurement that nothing keeps true.
 ### How a kept comment reads
 
 A comment that earns its place still has to be worth reading. A comment that
-is kept or rewritten obeys five rules:
+is kept or rewritten obeys these rules:
 
 - **Short.** One or two sentences. A comment that needs a paragraph is usually a
   fact with a home further down the ladder, or one that belongs in documentation.
@@ -293,7 +293,7 @@ type, the target declaration, the reference target, or the rewritten text. A
 verdict with no replacement is not actionable; the agent returns `keep` instead.
 
 `tighten` is the verdict for a comment that carries a real fact but breaks one
-of the four reading rules or pins a volatile value; it carries the shorter text,
+of the reading rules or pins a volatile value; it carries the shorter text,
 with the value removed. `delete` only when the value *was* the whole comment. A
 comment that explains a concept with no doc to point at stays in place and is
 reported as a documentation gap.

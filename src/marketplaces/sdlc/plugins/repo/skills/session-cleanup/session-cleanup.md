@@ -50,10 +50,14 @@ Establish four facts before checking anything:
 git rev-parse --abbrev-ref HEAD                       # the branch under review
 git rev-parse --show-toplevel                         # this checkout's root
 git worktree list --porcelain                         # every worktree and its branch
-git symbolic-ref --short refs/remotes/origin/HEAD     # the default branch
+git symbolic-ref --short refs/remotes/origin/HEAD     # e.g. `origin/main`
 ```
 
-The default branch falls back to `main` when `origin/HEAD` is unset. A branch
+That last command yields a **remote-tracking ref** — `origin/main`, not `main`.
+Use it verbatim wherever the default branch is needed; never prefix it with
+`origin/` again. It falls back to `origin/main` when `origin/HEAD` is unset.
+Comparing against a local branch instead is the stale-base mistake: `git fetch`
+advances `origin/main` and leaves a local `main` where it was. A branch
 argument overrides the current branch, and its worktree is the entry in
 `git worktree list` bound to it — never a path guessed from the branch name, since
 worktrees live wherever they were created.
@@ -77,11 +81,19 @@ Two separate facts, in this order:
 
 ```bash
 git fetch origin --prune
-git -C <worktree> log --oneline origin/<default>..<branch>   # commits not in the default branch
+git -C <worktree> log --oneline <default-ref>..<branch>   # commits not in the default branch
 ```
 
-An empty result means every commit on the branch is already reachable from the
-default branch — merged, squash-merged, or rebased in, all of which this test
+`<default-ref>` is the value from step 1 exactly as git printed it.
+
+**A failed check is not a passed one.** If `git log` exits non-zero — an
+unresolvable ref, no `origin`, a detached `HEAD` — its output is empty for a
+reason that has nothing to do with the branch being merged. Treat any non-zero
+exit as `SESSION-CLEANUP-BLOCKED reason="unresolved"` and stop. Only an empty
+result from a command that *succeeded* means anything.
+
+An empty result from a successful check means every commit on the branch is
+already reachable from the default branch — merged, squash-merged, or rebased in, all of which this test
 catches, because it asks about content reachability rather than about the PR.
 
 When the result is non-empty the work is unlanded. Distinguish the two cases for
@@ -135,7 +147,9 @@ git -C <main-checkout> branch --list <branch>
 git ls-remote --heads origin <branch>
 ```
 
-All three must come back without the branch or worktree. Then print one line:
+All three must come back without the branch or worktree — except under
+`--keep-branch`, which keeps the branch deliberately, so only the worktree is
+verified gone. Then print one line:
 
 ```text
 SESSION-CLEANUP-DONE branch=<deleted|kept> worktree=<removed|absent> remote=<deleted|absent>

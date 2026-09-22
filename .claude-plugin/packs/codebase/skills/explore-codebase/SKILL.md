@@ -57,8 +57,10 @@ boundaries are crossed (I/O, network, database).
 
 ## 5. Use git history when "why" matters
 
-For surprising or "weird" code, `git log -p <file>` and `git blame` explain how it got that way far
-faster than guessing, and point to the commit or PR that introduced it.
+For surprising or "weird" code, `git log -p -- <file>` and `git blame -- <file>` explain how it got
+that way far faster than guessing, and point to the commit or PR that introduced it. Keep the `--`:
+without it git rejects a path that no longer exists at `HEAD`, which is exactly the deleted or
+renamed file whose history you wanted.
 
 ## 6. Delegate deep dives when subagents are available
 
@@ -91,8 +93,8 @@ Keep it tight and link to specifics with `path:line` rather than pasting large b
 ## Optionally persist the map to disk
 
 When the user asks for a file, or the codebase is large enough that the map won't sit comfortably in
-chat, write the findings to a fresh temp directory (e.g. `/tmp/codebase-map-<repo>/`) and tell the
-user the path. Three formats:
+chat, write the findings to a fresh directory in the harness's temp or scratchpad location (on POSIX,
+`/tmp/codebase-map-<repo>/`) and tell the user the path. Three formats:
 
 **Single markdown file** (`<repo>-map.md`) — the default. The map structure above as one document
 with a short table of contents. Keep `path:line` references as inline code so they stay greppable.
