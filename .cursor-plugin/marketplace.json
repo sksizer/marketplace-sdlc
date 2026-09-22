@@ -14,6 +14,12 @@
       "version": "0.1.0"
     },
     {
+      "name": "codebase",
+      "source": ".cursor-plugin/packs/codebase",
+      "description": "Skills for understanding and improving an unfamiliar body of code.",
+      "version": "0.1.0"
+    },
+    {
       "name": "demo",
       "source": ".cursor-plugin/packs/demo",
       "description": "A demonstration plugin: one skill, to prove the marketplace builds and installs.",

@@ -1,0 +1,15 @@
+{
+  "name": "codebase",
+  "version": "0.1.0",
+  "description": "Skills for understanding and improving an unfamiliar body of code.",
+  "author": {
+    "name": "sksizer"
+  },
+  "license": "UNLICENSED",
+  "keywords": [],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "codebase",
+    "category": "Productivity"
+  }
+}
