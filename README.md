@@ -54,3 +54,7 @@ Per-harness install instructions land here as each one is wired up.
 Scripts (Node and/or Python) are expected for building and validating the
 per-harness outputs. Until the layout settles, open an issue or a PR describing
 the capability you want to add and which harnesses it should target.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
