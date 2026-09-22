@@ -126,29 +126,47 @@ One idea per note is what makes the graph useful — keep each note focused and 
 than writing long notes.
 
 **HTML page with diagrams** (`<repo>-map.html`) — when the structure *is* the finding: a layered
-architecture, a pipeline with stages, a dependency graph, a boundary that cuts across modules. Ask
-for it with `--html`, or offer it when you notice you are describing a shape in prose that a picture
-would settle.
+architecture, a pipeline with stages, a boundary that cuts across modules. Ask for it with
+`--html`, or offer it when you notice you are describing a shape in prose that a picture would
+settle.
 
-Carry the same map structure as the markdown file, with diagrams where they earn their place:
+**Never hand-write the HTML.** Emit a JSON payload and render it:
 
-- **One self-contained file.** Inline SVG, inline CSS, no external assets, no build step. It has to
-  survive being emailed or opened from a temp directory with no network.
+```text
+node <skill-dir>/render_map.mjs map.json <repo>-map.html
+```
+
+The contract is `map-page.schema.json` beside this skill — read it before writing the payload. You
+supply content and diagram *data*; the renderer owns every pixel. That split is the point: a
+payload cannot produce an SVG that overflows its box, overlaps its own labels, or vanishes in dark
+mode, because those are not things a payload can say. The renderer validates before it writes and
+fails with the path of each bad field.
+
+Three diagram kinds, chosen by what the shape actually is:
+
+| Kind | Use it for |
+|---|---|
+| `layers` | Rows stacked top to bottom, optionally cut by a labelled boundary — layered architectures, anything separated by a seam. |
+| `pipeline` | Ordered stages left to right, optionally fanning out to terminal outputs — traced flows. |
+| `inventory` | A labelled container holding a grid of names — module rosters, anything whose point is membership. |
+
+Section headings become a fixed contents rail down the left of the page, which scrolls on its own
+and tracks the section you are reading. It appears once a page has three sections. Write headings
+that read as a table of contents — the rail is the only navigation a long map gets.
+
+A fourth, `raw`, takes hand-authored SVG. It exists so an unusual shape is possible, not so it is
+easy: raw markup skips every guarantee above. Prefer a kind, and prefer proposing a new kind over
+reaching for `raw` twice.
+
+What does not change from the other formats:
+
 - **Draw the mechanism, not the directory tree.** A picture of the folder layout tells the reader
-  what `ls` already told them. Draw the thing prose is bad at: where control flows, which boundary
-  separates what, what is translated as it crosses a stage. If a diagram would only restate a list,
-  write the list.
-- **One diagram per mechanism**, each with a caption saying what it shows and a `path:line` for
-  where to verify it.
-- **Cite everything.** Every structural claim on the page carries a `path:line`, the same discipline
-  as in chat. A diagram is an assertion about the code and is held to the same standard.
-- **Legible in both themes.** Define colors as tokens on `:root`, redefine them under
-  `@media (prefers-color-scheme: dark)`, and give `body` an explicit background. Never rely on a
-  default white page behind an SVG whose strokes are dark.
-- **Readable at phone width.** Give each SVG a `viewBox` and `width: 100%; height: auto` rather than
-  fixed pixel dimensions.
-
-Diagrams are the expensive part of this format. Two that show real mechanism beat six that decorate.
+  what `ls` already told them. Draw where control flows, which boundary separates what, what is
+  translated crossing a stage. If a diagram would only restate a list, write the list.
+- **Cite everything.** Every figure takes a `cite` of `path:line`. A diagram is an assertion about
+  the code and is held to the same standard as a sentence.
+- **Two diagrams that show real mechanism beat six that decorate.** Sections are optional — omit a
+  heading rather than filling it.
 
 ## Anti-patterns
 
