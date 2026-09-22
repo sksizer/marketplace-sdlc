@@ -83,6 +83,44 @@ export const STRESS = {
       accent: i === 4 ? 'bad' : undefined,
     })),
   },
+  'containment: three levels, long names at the deepest': {
+    kind: 'containment',
+    columns: 2,
+    groups: [
+      {
+        title: 'a top-level group whose title is long',
+        sublabel: 'and a sublabel that is longer than the title above it',
+        columns: 1,
+        groups: [
+          { title: 'nested', items: Array.from({ length: 7 }, (_, i) => ({ name: `a_rather_long_member_name_${i}` })) },
+          { title: 'nested with notes', accent: 'bad', items: [{ name: 'one', note: 'carrying a note long enough to double the cell' }] },
+        ],
+      },
+      { title: 'sibling', columns: 2, groups: [{ title: 'x', items: [{ name: 'y' }] }, { title: 'z', items: [{ name: 'w' }] }] },
+    ],
+  },
+}
+
+/** The renderer and the published schema must agree on what a payload may say. */
+export function contractDrift() {
+  const schema = JSON.parse(readFileSync(join(SKILL, 'map-page.schema.json'), 'utf8'))
+  const declared = schema.$defs.diagram.oneOf.map((/** @type {any} */ o) => o.properties.kind.const).sort()
+  const blocks = schema.$defs.block.oneOf.map((/** @type {any} */ o) => o.properties.type.const).sort()
+  const src = readFileSync(join(SKILL, 'render_map.mjs'), 'utf8')
+  const setOf = (/** @type {string} */ name) =>
+    [...src.match(new RegExp(`${name} = new Set\\(\\[([^\\]]+)\\]`))[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort()
+  const out = []
+  const cmp = (/** @type {string} */ what, /** @type {string[]} */ a, /** @type {string[]} */ b) => {
+    if (a.join() !== b.join()) out.push(`${what}: schema has [${a}], renderer has [${b}]`)
+  }
+  cmp('diagram kinds', declared, setOf('DIAGRAM_KINDS'))
+  cmp('block types', blocks, setOf('BLOCK_TYPES'))
+  // Every declared kind must also be rendered, not merely accepted.
+  const rendered = [...src.matchAll(/case '([a-z]+)': return render/g)].map((m) => m[1])
+  for (const k of declared) {
+    if (k !== 'raw' && !rendered.includes(k)) out.push(`diagram kind ${k} is in the schema but has no renderer`)
+  }
+  return out
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -95,15 +133,27 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       checked++
     }
   } else {
+    // Drift first: a renderer and schema that disagree make every later
+    // result meaningless, and the failure reads better on its own.
+    const drift = contractDrift()
+    if (drift.length) {
+      console.error(`DIAGRAM-CHECK fail ${drift.length} contract mismatches`)
+      for (const d of drift) console.error(`  ${d}`)
+      process.exit(1)
+    }
     const { renderDiagram, validate } = await import(join(SKILL, 'render_map.mjs'))
     for (const [name, diagram] of Object.entries(STRESS)) {
-      validate({ title: 't', lede: 'l', sections: [{ heading: 'h', blocks: [{ type: 'figure', diagram }] }] })
-      problems.push(...findOverflows(renderDiagram(diagram), name))
+      try {
+        validate({ title: 't', lede: 'l', sections: [{ heading: 'h', blocks: [{ type: 'figure', diagram }] }] })
+        problems.push(...findOverflows(renderDiagram(diagram), name))
+      } catch (e) {
+        problems.push(`${name}: ${/** @type {Error} */ (e).message.replace(/\n\s*/g, ' ')}`)
+      }
       checked++
     }
   }
   if (problems.length) {
-    console.error(`DIAGRAM-CHECK fail ${problems.length} overflowing labels`)
+    console.error(`DIAGRAM-CHECK fail ${problems.length} problems`)
     for (const p of problems) console.error(`  ${p}`)
     process.exit(1)
   }

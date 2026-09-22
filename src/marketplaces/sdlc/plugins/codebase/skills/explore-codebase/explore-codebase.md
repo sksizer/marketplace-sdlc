@@ -142,19 +142,20 @@ payload cannot produce an SVG that overflows its box, overlaps its own labels, o
 mode, because those are not things a payload can say. The renderer validates before it writes and
 fails with the path of each bad field.
 
-Three diagram kinds, chosen by what the shape actually is:
+Four diagram kinds, chosen by what the shape actually is:
 
 | Kind | Use it for |
 |---|---|
 | `layers` | Rows stacked top to bottom, optionally cut by a labelled boundary — layered architectures, anything separated by a seam. |
 | `pipeline` | Ordered stages left to right, optionally fanning out to terminal outputs — traced flows. |
 | `inventory` | A labelled container holding a grid of names — module rosters, anything whose point is membership. |
+| `containment` | Boxes inside boxes, up to three deep — which package owns which modules, and which of those are the seams. Use when the nesting itself is the finding. |
 
 Section headings become a fixed contents rail down the left of the page, which scrolls on its own
 and tracks the section you are reading. It appears once a page has three sections. Write headings
 that read as a table of contents — the rail is the only navigation a long map gets.
 
-A fourth, `raw`, takes hand-authored SVG. It exists so an unusual shape is possible, not so it is
+A fifth, `raw`, takes hand-authored SVG. It exists so an unusual shape is possible, not so it is
 easy: raw markup skips every guarantee above. Prefer a kind, and prefer proposing a new kind over
 reaching for `raw` twice.
 
@@ -163,6 +164,11 @@ What does not change from the other formats:
 - **Draw the mechanism, not the directory tree.** A picture of the folder layout tells the reader
   what `ls` already told them. Draw where control flows, which boundary separates what, what is
   translated crossing a stage. If a diagram would only restate a list, write the list.
+- **Draw containment when the modules are significant, and group them by job.** A `containment`
+  diagram earns its place when the codebase has more than a handful of modules and which unit owns
+  what is part of the answer. Group by what the modules do — content, build, output, seams — not
+  by the folders they happen to sit in. If your groups end up named after directories and hold
+  exactly their contents, you have drawn the tree; drop the figure.
 - **Cite everything.** Every figure takes a `cite` of `path:line`. A diagram is an assertion about
   the code and is held to the same standard as a sentence.
 - **Two diagrams that show real mechanism beat six that decorate.** Sections are optional — omit a

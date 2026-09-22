@@ -41,7 +41,7 @@ No build is required to use this repository, and the checks are plain Node with
 no dependencies.
 
 ```bash
-node scripts/check-diagrams.mjs            # diagram labels stay inside their boxes
+node scripts/check-diagrams.mjs            # renderer and schema agree; labels stay in their boxes
 node scripts/build-doc-images.mjs --check  # the images in docs/ are not stale
 ```
 
