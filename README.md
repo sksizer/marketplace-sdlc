@@ -20,15 +20,20 @@ a rules file for another, a prompt directory for a third.
 The list is expected to grow. Nothing here is Claude-specific by design — a
 harness is added by teaching the repo how to emit that harness's format.
 
+## Documentation
+
+- [Skills](docs/skills.md) — every published skill and when to reach for it.
+- [Structural diagrams](docs/diagrams.md) — the diagrams `explore-codebase` draws.
+- [Repository layout and how to add a skill](docs/README.md).
+
 ## Status
 
-Early. The directory layout is not settled yet, so this README deliberately
-does not document one. What is fixed:
+Early, and the set of skills is still growing. What is fixed:
 
 - Extensions are versioned in git and consumed directly from this repo.
 - Each harness gets a form it can load natively — no manual copy-paste.
-- Where a capability is shared across harnesses, the intent is one source of
-  truth rather than parallel hand-maintained copies.
+- Extensions are authored once as markdown notes under `src/` and rendered per
+  harness, rather than maintained as parallel copies.
 
 ## Installing
 
@@ -51,6 +56,6 @@ Per-harness install instructions land here as each one is wired up.
 
 ## Contributing
 
-Scripts (Node and/or Python) are expected for building and validating the
-per-harness outputs. Until the layout settles, open an issue or a PR describing
-the capability you want to add and which harnesses it should target.
+[docs/README.md](docs/README.md) covers the vault layout, the checks, and the
+steps for adding a skill. For a capability that needs a harness this repo does
+not emit yet, open an issue describing it and which harnesses it should target.
