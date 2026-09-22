@@ -24,6 +24,12 @@
       "version": "0.1.0"
     },
     {
+      "name": "repo",
+      "source": "./.claude-plugin/packs/repo",
+      "description": "Skills for keeping a repository's branches, worktrees and configuration tidy.",
+      "version": "0.1.0"
+    },
+    {
       "name": "review",
       "source": "./.claude-plugin/packs/review",
       "description": "Skills for judging a change or a body of code before it merges.",

@@ -41,6 +41,18 @@
       "category": "Productivity"
     },
     {
+      "name": "repo",
+      "source": {
+        "source": "local",
+        "path": "./.agents/packs/repo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "review",
       "source": {
         "source": "local",

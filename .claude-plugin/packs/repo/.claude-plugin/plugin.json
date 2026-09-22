@@ -1,0 +1,11 @@
+{
+  "name": "repo",
+  "version": "0.1.0",
+  "description": "Skills for keeping a repository's branches, worktrees and configuration tidy.",
+  "author": {
+    "name": "sksizer"
+  },
+  "license": "UNLICENSED",
+  "keywords": [],
+  "skills": "./skills/"
+}
