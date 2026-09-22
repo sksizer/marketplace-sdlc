@@ -96,9 +96,20 @@ When reporting what you've learned, give a structured model the user can act on:
 - **Stack & shape** — language, frameworks, architectural style (monolith, layered, microservices,
   …).
 - **Layout** — the few directories that matter and what each owns.
+- **API** — *libraries only.* The public surface: the entry points and exported types a caller
+  actually uses, and what is deliberately withheld. Read the project's own export declaration
+  first — `exports` in `package.json`, `pub use` in `lib.rs`, `__all__`, the barrel `index.ts` —
+  because it is the authoritative list and it often disagrees with the README. Say which of the
+  surface is stable and which is internal but reachable.
 - **Key flows** — the main path(s) traced, as `A → B → C`, with the entry `file:line`.
 - **Where to look next** — the right file for the user's likely next task.
 - **Gotchas** — non-obvious conventions, coupling, or risks you noticed.
+
+Include the **API** section when other code imports this project: it publishes a package, exposes
+a plugin or extension interface, or is consumed as a library elsewhere in a monorepo. An
+application that is only run, never imported, does not need one — its entry points are already
+covered by **Key flows**. When you are unsure which it is, the manifest settles it: a package with
+declared exports is a library.
 
 Keep it tight and link to specifics with `path:line` rather than pasting large blocks.
 
