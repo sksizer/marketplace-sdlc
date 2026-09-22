@@ -1,0 +1,15 @@
+{
+  "name": "authoring",
+  "version": "0.1.0",
+  "description": "Skills for writing and maintaining documents alongside the people who own them.",
+  "author": {
+    "name": "sksizer"
+  },
+  "license": "UNLICENSED",
+  "keywords": [],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "authoring",
+    "category": "Productivity"
+  }
+}

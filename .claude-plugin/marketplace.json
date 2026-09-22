@@ -6,6 +6,12 @@
   "description": "SDLC plugins and skills sksizer publishes for coding agents.",
   "plugins": [
     {
+      "name": "authoring",
+      "source": "./.claude-plugin/packs/authoring",
+      "description": "Skills for writing and maintaining documents alongside the people who own them.",
+      "version": "0.1.0"
+    },
+    {
       "name": "demo",
       "source": "./.claude-plugin/packs/demo",
       "description": "A demonstration plugin: one skill, to prove the marketplace builds and installs.",
@@ -15,6 +21,12 @@
       "name": "repo",
       "source": "./.claude-plugin/packs/repo",
       "description": "Skills for keeping a repository's branches, worktrees and configuration tidy.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "review",
+      "source": "./.claude-plugin/packs/review",
+      "description": "Skills for judging a change or a body of code before it merges.",
       "version": "0.1.0"
     }
   ]
