@@ -1,0 +1,47 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
+import { Code } from '@astrojs/starlight/components'
+import { getCollection } from 'astro:content'
+import { loadMarketplace, repoSlug } from '../lib/marketplace'
+
+const marketplace = loadMarketplace()
+const skills = new Map((await getCollection('skills')).map((entry) => [entry.id, entry.data]))
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const headings = [
+  { depth: 2, slug: 'install', text: 'Install' },
+  ...marketplace.plugins.map((plugin) => ({ depth: 2, slug: plugin.name, text: plugin.name })),
+]
+---
+
+<StarlightPage frontmatter={{ title: `${marketplace.name} marketplace`, description: marketplace.description }} headings={headings}>
+  <p>{marketplace.description}</p>
+  <p>
+    {marketplace.plugins.length} plugins, {marketplace.plugins.reduce((n, p) => n + p.skills.length, 0)} skills.
+  </p>
+
+  <h2 id="install">Install</h2>
+  <p>Add the marketplace to Claude Code, then install a plugin from it:</p>
+  <Code
+    lang="text"
+    code={`/plugin marketplace add ${repoSlug}\n/plugin install <plugin>@${marketplace.name}`}
+  />
+
+  {
+    marketplace.plugins.map((plugin) => (
+      <section>
+        <h2 id={plugin.name}>
+          <a href={`${base}/${plugin.name}/`}>{plugin.name}</a> <small>v{plugin.version}</small>
+        </h2>
+        <p>{plugin.description}</p>
+        <ul>
+          {plugin.skills.map((skill) => (
+            <li>
+              <a href={`${base}/${plugin.name}/${skill.name}/`}><code>{skill.name}</code></a>
+              — {skills.get(`${plugin.name}/${skill.name}`)?.description}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</StarlightPage>
