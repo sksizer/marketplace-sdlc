@@ -1,0 +1,85 @@
+# A pull request whose base has already been merged into the default branch
+# merges into a dead end: GitHub reports it as merged, the work never reaches
+# the default branch, and nothing warns. This repository lost two skills that
+# way (#6 and #16).
+#
+# Two guards, because one is not enough:
+#   - pr-base runs on the pull request and refuses a base that is already
+#     merged. It catches a stale base at open or push time.
+#   - retarget-orphans runs after a push to the default branch, which is the
+#     moment a base goes inert, and moves every affected pull request onto the
+#     default branch. This is the one that catches the race, where the base
+#     merges seconds before the stacked pull request does.
+name: PR base
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-base:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The base must still lead to the default branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.base_ref }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          if [ "$BASE" = "$DEFAULT" ]; then
+            echo "Base is $DEFAULT."
+            exit 0
+          fi
+          git fetch origin "$BASE" "$DEFAULT" --quiet
+          if git merge-base --is-ancestor "origin/$BASE" "origin/$DEFAULT"; then
+            echo "::error::Base branch '$BASE' is already contained in '$DEFAULT'. Merging into it would go nowhere. Retarget this pull request to '$DEFAULT'."
+            exit 1
+          fi
+          if [ "$(gh pr list --state merged --head "$BASE" --json number --jq 'length')" -gt 0 ]; then
+            echo "::error::Base branch '$BASE' has already been merged by its own pull request. Merging into it would go nowhere. Retarget this pull request to '$DEFAULT'."
+            exit 1
+          fi
+          echo "Base '$BASE' is still live."
+
+  retarget-orphans:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retarget pull requests whose base just went inert
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          gh pr list --state open --json number,baseRefName \
+            --jq '.[] | select(.baseRefName != "'"$DEFAULT"'") | "\(.number) \(.baseRefName)"' \
+          | while read -r number base; do
+              git fetch origin "$base" --quiet 2>/dev/null || true
+              dead=no
+              if git rev-parse --verify --quiet "origin/$base" >/dev/null &&
+                 git merge-base --is-ancestor "origin/$base" "origin/$DEFAULT"; then
+                dead=yes
+              elif [ "$(gh pr list --state merged --head "$base" --json number --jq 'length')" -gt 0 ]; then
+                dead=yes
+              fi
+              if [ "$dead" = yes ]; then
+                echo "PR #$number: base '$base' is now merged into $DEFAULT — retargeting."
+                gh pr edit "$number" --base "$DEFAULT"
+                gh pr comment "$number" --body "Retargeted to \`$DEFAULT\` automatically: the base branch \`$base\` has been merged, so this pull request was pointing at a dead end. Merging it there would have reported success without reaching \`$DEFAULT\`."
+              fi
+            done
+          echo "Done."

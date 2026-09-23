@@ -58,3 +58,20 @@ the capability you want to add and which harnesses it should target.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Stacked pull requests
+
+A pull request based on another branch merges into a dead end once that base is
+merged: GitHub reports it as merged and the work never reaches `main`. This
+repository lost a skill that way twice.
+
+`.github/workflows/pr-base.yml` refuses such a pull request, and retargets any
+open one to `main` whenever a push to `main` makes its base inert. Where Actions
+are unavailable, run the same check by hand:
+
+```bash
+./scripts/check-pr-bases.sh
+```
+
+Prefer basing on `main`. Where stacking is worth it, retarget to `main` before
+merging.
