@@ -132,7 +132,7 @@ type, the target declaration, the reference target, or the rewritten text. A
 verdict with no replacement is not actionable; the agent returns `keep` instead.
 
 `tighten` is the verdict for a comment that carries a real fact but breaks one
-of the four reading rules or pins a volatile value; it carries the shorter text,
+of the reading rules or pins a volatile value; it carries the shorter text,
 with the value removed. `delete` only when the value *was* the whole comment. A
 comment that explains a concept with no doc to point at stays in place and is
 reported as a documentation gap.

@@ -19,9 +19,13 @@ not to review the code yourself.
 ## 1. Resolve the review target
 
 - Base: the upstream default branch —
-  `git symbolic-ref refs/remotes/origin/HEAD --short` (strip the
-  `origin/` prefix); fall back to `main` if unset. Fetch first
-  (`git fetch origin`) so the base is current.
+  `git symbolic-ref refs/remotes/origin/HEAD --short`, used verbatim; it
+  already names a remote-tracking ref (`origin/main`). Fall back to
+  `origin/main` if unset. Fetch first (`git fetch origin`) so the base is
+  current — which is why the base must stay the remote-tracking ref: a
+  fetch advances `origin/main` and leaves a local `main` behind, so
+  stripping the prefix would review against whatever the main checkout
+  last pulled.
 - Subject: the branch at the current working directory. Run the reviewer
   FROM the directory the user is in (a worktree reviews its own branch).
 - If the current branch IS the default branch and the tree is clean,
