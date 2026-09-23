@@ -1,6 +1,6 @@
 ---
 name: sks-code-review
-description: Shell out to a headless external agent — codex by default, claude on request — for a code review of the current branch against the upstream default branch: potential errors, cleanup areas, duplication, and opportunities to better use or grow our library set.
+description: "Shell out to a headless external agent — codex by default, claude on request — for a code review of the current branch against the upstream default branch: potential errors, cleanup areas, duplication, and opportunities to better use or grow our library set."
 allowed-tools: shell read_file
 metadata:
   trigger: /sks-code-review
