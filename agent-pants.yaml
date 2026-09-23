@@ -1,14 +1,6 @@
-# The repo's Agent Pants project file. `agent-pants` walks up from the working
-# directory to find it, so the verbs work from anywhere in the checkout. Paths
-# are relative to this file. The machine file
-# (`<config-home>/agent-pants/config.yaml`) holds per-machine values such as
-# `destinations`; nothing machine-specific belongs here.
 vault: src
 marketplace:
-  # Where a note with no `ap-plugin` lands.
   default_plugin: sdlc
-  # The marketplace directory. `.` makes this repository its own marketplace:
-  # each harness owns one top-level tree here (`.claude-plugin/`, `.agents/`,
-  # `.cursor-plugin/`), so the bare repo URL is the marketplace location for
-  # every harness at once.
+  # `.` makes the repository itself the marketplace, so its bare URL is the
+  # install location.
   out: "."
