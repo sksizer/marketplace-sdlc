@@ -1,6 +1,6 @@
 ---
 name: comment-review
-description: Review the comments in a diff or a subtree and minimize them against the expression ladder: a fact belongs first in the identifier, then in the signature and types, then in the declaration's doc annotation, and only when none of those can carry it does it earn an inline comment. Deletes comments that restate the code, moves facts down the ladder, tightens what survives to one short literal statement, strips volatile project state, and replaces duplicated prose with a reference to one canonical home. Invoke for "review the comments", "too many comments", "comment cleanup", or as the comment pass on a branch before review.
+description: "Review the comments in a diff or a subtree and minimize them against the expression ladder: a fact belongs first in the identifier, then in the signature and types, then in the declaration's doc annotation, and only when none of those can carry it does it earn an inline comment. Deletes comments that restate the code, moves facts down the ladder, tightens what survives to one short literal statement, strips volatile project state, and replaces duplicated prose with a reference to one canonical home. Invoke for \"review the comments\", \"too many comments\", \"comment cleanup\", or as the comment pass on a branch before review."
 allowed-tools: Bash Read Edit Glob Grep Task AskUserQuestion Workflow
 argument-hint: "[diff | <path>… | <PR#>] [--report-only] [--workflow]"
 metadata:

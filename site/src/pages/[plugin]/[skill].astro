@@ -1,0 +1,51 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
+import { getCollection, render } from 'astro:content'
+import { loadMarketplace, sourceUrl, type Skill } from '../../lib/marketplace'
+
+export function getStaticPaths() {
+  return loadMarketplace().plugins.flatMap((plugin) =>
+    plugin.skills.map((skill) => ({ params: { plugin: plugin.name, skill: skill.name }, props: { skill } })),
+  )
+}
+
+const { skill } = Astro.props as { skill: Skill }
+const entry = (await getCollection('skills')).find((e) => e.id === `${skill.plugin}/${skill.name}`)
+if (!entry) throw new Error(`No SKILL.md for ${skill.plugin}/${skill.name}`)
+const { Content, headings } = await render(entry)
+const { data } = entry
+const sourceBase = `${sourceUrl}/.claude-plugin/packs/${skill.plugin}/skills/${skill.name}`
+const invocation = data.metadata?.trigger ?? `/${skill.plugin}:${skill.name}`
+---
+
+<StarlightPage frontmatter={{ title: skill.name, description: data.description }} headings={headings}>
+  <p>{data.description}</p>
+  <table>
+    <tbody>
+      <tr><th>Plugin</th><td><code>{skill.plugin}</code></td></tr>
+      <tr>
+        <th>Invoke</th>
+        <td><code>{invocation}{data['argument-hint'] ? ` ${data['argument-hint']}` : ''}</code></td>
+      </tr>
+      {data['allowed-tools'] && <tr><th>Allowed tools</th><td><code>{data['allowed-tools']}</code></td></tr>}
+      <tr><th>Source</th><td><a href={`${sourceBase}/SKILL.md`}>SKILL.md</a></td></tr>
+      {
+        skill.files.length > 0 && (
+          <tr>
+            <th>Bundled files</th>
+            <td>
+              {skill.files.map((file, i) => (
+                <>
+                  {i > 0 && ', '}
+                  <a href={`${sourceBase}/${file}`}><code>{file}</code></a>
+                </>
+              ))}
+            </td>
+          </tr>
+        )
+      }
+    </tbody>
+  </table>
+  <hr />
+  <Content />
+</StarlightPage>

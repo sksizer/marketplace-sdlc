@@ -1,0 +1,54 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
+import { Code } from '@astrojs/starlight/components'
+import { getCollection, getEntry, render } from 'astro:content'
+import { loadMarketplace, type Plugin } from '../../lib/marketplace'
+
+export function getStaticPaths() {
+  const { name, plugins } = loadMarketplace()
+  return plugins.map((plugin) => ({ params: { plugin: plugin.name }, props: { plugin, marketplace: name } }))
+}
+
+const { plugin, marketplace } = Astro.props as { plugin: Plugin; marketplace: string }
+const skills = new Map((await getCollection('skills')).map((entry) => [entry.id, entry.data]))
+const note = await getEntry('plugins', plugin.name)
+const About = note ? (await render(note)).Content : undefined
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const headings = [
+  { depth: 2, slug: 'install', text: 'Install' },
+  { depth: 2, slug: 'skills', text: 'Skills' },
+]
+---
+
+<StarlightPage frontmatter={{ title: plugin.name, description: plugin.description }} headings={headings}>
+  <p>{plugin.description}</p>
+  {About && <About />}
+
+  <table>
+    <tbody>
+      <tr><th>Version</th><td>{plugin.version}</td></tr>
+      {plugin.license && <tr><th>License</th><td>{plugin.license}</td></tr>}
+      <tr><th>Skills</th><td>{plugin.skills.length}</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="install">Install</h2>
+  <Code lang="text" code={`/plugin install ${plugin.name}@${marketplace}`} />
+
+  <h2 id="skills">Skills</h2>
+  <table>
+    <thead><tr><th>Skill</th><th>Description</th></tr></thead>
+    <tbody>
+      {
+        plugin.skills.map((skill) => (
+          <tr>
+            <td style="white-space: nowrap">
+              <a href={`${base}/${plugin.name}/${skill.name}/`}><code>{skill.name}</code></a>
+            </td>
+            <td>{skills.get(`${plugin.name}/${skill.name}`)?.description}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</StarlightPage>

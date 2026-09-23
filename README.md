@@ -36,7 +36,7 @@ does not document one. What is fixed:
 
 ```bash
 /plugin marketplace add sksizer/marketplace-sdlc
-/plugin install <plugin>@marketplace-sdlc
+/plugin install <plugin>@sdlc
 ```
 
 Use a local path instead of the GitHub slug to track a working tree:
@@ -48,6 +48,19 @@ Use a local path instead of the GitHub slug to track a working tree:
 ### Other harnesses
 
 Per-harness install instructions land here as each one is wired up.
+
+## Documentation site
+
+`site/` is an Astro Starlight site with a page for each plugin and skill,
+built from the committed `.claude-plugin/` tree and the plugin notes under
+`src/`. `.github/workflows/pages.yml` deploys it to GitHub Pages from `main`.
+To preview it locally:
+
+```bash
+cd site
+bun install
+bun run dev
+```
 
 ## Contributing
 
