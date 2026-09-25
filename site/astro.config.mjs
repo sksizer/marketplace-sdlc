@@ -22,6 +22,7 @@ export default defineConfig({
       social: [{ icon: 'github', label: 'GitHub', href: repoUrl }],
       sidebar: [
         { label: 'Overview', link: '/' },
+        { label: 'Structural diagrams', link: '/diagrams/' },
         ...marketplace.plugins.map((plugin) => ({
           label: plugin.name,
           items: [

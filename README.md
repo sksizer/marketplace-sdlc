@@ -22,13 +22,16 @@ harness is added by teaching the repo how to emit that harness's format.
 
 ## Status
 
-Early. The directory layout is not settled yet, so this README deliberately
-does not document one. What is fixed:
+Early, and the set of skills is still growing. What is fixed:
 
 - Extensions are versioned in git and consumed directly from this repo.
 - Each harness gets a form it can load natively — no manual copy-paste.
-- Where a capability is shared across harnesses, the intent is one source of
-  truth rather than parallel hand-maintained copies.
+- Skills are authored once as markdown notes under `src/` and rendered per
+  harness, rather than maintained as parallel copies.
+
+A skill's peer files — a script, a schema — are copied into every pack
+verbatim. There is no build step between the vault and an install, so a peer
+file has to run as written and carry no dependencies.
 
 ## Installing
 
@@ -62,11 +65,33 @@ bun install
 bun run dev
 ```
 
+## Prose documentation
+
+Longer pages live in [`docs/`](docs), which is the source of truth for them.
+They read correctly on GitHub with relative links, and the site copies them in
+at build time through `scripts/import-docs.mjs`. Edit `docs/`, never the
+generated copy under `site/src/content/docs/`.
+
+- [Structural diagrams](docs/diagrams.md) — the diagrams `explore-codebase`
+  draws, and the payload that produces each one.
+
 ## Contributing
 
-Scripts (Node and/or Python) are expected for building and validating the
-per-harness outputs. Until the layout settles, open an issue or a PR describing
-the capability you want to add and which harnesses it should target.
+Run `agent-pants build` after changing anything under `src/`, and commit the
+regenerated packs with it — a skill whose prose names a peer file its pack
+omits is broken for everyone who installs it. Use a current `agent-pants`: an
+older binary silently reverts newer frontmatter it does not understand.
+
+The checks need no dependencies beyond Node:
+
+```bash
+node scripts/check-diagrams.mjs            # renderer and schema agree; labels stay in their boxes
+node scripts/build-doc-images.mjs --check  # the diagram images in docs/ are not stale
+```
+
+Open a pull request against `main`. A pull request stacked on another branch
+merges into a dead end once that base lands, and this repository has lost work
+that way; `.github/workflows/pr-base.yml` now refuses it.
 
 ## License
 

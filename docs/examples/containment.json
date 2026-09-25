@@ -1,0 +1,67 @@
+{
+  "name": "containment",
+  "caption": "Boxes inside boxes, three levels deep. The nesting is the finding: which crate owns which modules, and which of them are the seams everything else depends on.",
+  "diagram": {
+    "kind": "containment",
+    "columns": 2,
+    "groups": [
+      {
+        "title": "agent-adapt-core",
+        "sublabel": "21 modules, no I/O of its own",
+        "columns": 1,
+        "groups": [
+          {
+            "title": "content",
+            "items": [
+              { "name": "vault" },
+              { "name": "discover" },
+              { "name": "scan" },
+              { "name": "corpus" },
+              { "name": "frontmatter" }
+            ]
+          },
+          {
+            "title": "build",
+            "items": [
+              { "name": "compile" },
+              { "name": "skill" },
+              { "name": "projection" },
+              { "name": "manifest" },
+              { "name": "namespace" },
+              { "name": "semver" }
+            ]
+          },
+          {
+            "title": "seams",
+            "accent": "bad",
+            "items": [
+              { "name": "vfs", "note": "the I/O trait" },
+              { "name": "guard", "note": "safety rails" }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "hosts",
+        "sublabel": "three crates over one core",
+        "columns": 1,
+        "groups": [
+          {
+            "title": "agent-pants",
+            "sublabel": "the CLI",
+            "items": [{ "name": "verbs" }, { "name": "native_vfs" }, { "name": "config" }]
+          },
+          {
+            "title": "agent-adapt-wasm",
+            "sublabel": "the Obsidian bridge",
+            "items": [{ "name": "bridge" }, { "name": "js_vfs" }]
+          },
+          {
+            "title": "agent-adapt-typegen",
+            "items": [{ "name": "emit" }]
+          }
+        ]
+      }
+    ]
+  }
+}
