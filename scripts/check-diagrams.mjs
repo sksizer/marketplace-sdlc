@@ -1,0 +1,161 @@
+/**
+ * check-diagrams.mjs — assert no diagram label escapes its box or the viewBox.
+ *
+ *   node scripts/check-diagrams.mjs [file.html|file.svg ...]
+ *
+ * With no arguments it renders the stress payloads below, which are built to
+ * defeat even layout: labels far longer than an even share of the row, notes
+ * that double a cell's width, a single wide box beside narrow ones. With
+ * arguments it checks already-rendered files instead.
+ *
+ * This is the guarantee explore-codebase advertises — that a payload cannot
+ * produce an SVG which overflows its box — held to mechanically.
+ */
+import { readFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const SKILL = join(ROOT, 'src/marketplaces/sdlc/plugins/codebase/skills/explore-codebase')
+
+/** Must match the renderer's own estimate, or this proves nothing. */
+const textWidth = (/** @type {string} */ s, /** @type {number} */ size) => s.length * size * 0.58
+
+/** @returns {string[]} one message per label that does not fit. */
+export function findOverflows(/** @type {string} */ source, /** @type {string} */ label = '') {
+  const out = []
+  const svgs = source.match(/<svg[\s\S]*?<\/svg>/g) ?? []
+  svgs.forEach((svg, n) => {
+    const vbw = Number(svg.match(/viewBox="[\d.-]+ [\d.-]+ ([\d.]+)/)?.[1] ?? 0)
+    const rects = [...svg.matchAll(/<rect x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)"/g)]
+      .map((m) => ({ x: +m[1], y: +m[2], w: +m[3], h: +m[4] }))
+    for (const m of svg.matchAll(/<text x="([\d.-]+)" y="([\d.-]+)"([^>]*)>([^<]*)<\/text>/g)) {
+      const [, xs, ys, attrs, raw] = m
+      if (/text-anchor="middle"/.test(attrs)) continue // centred labels carry their own backing plate
+      const x = +xs
+      const y = +ys
+      const size = Number(attrs.match(/font-size="([\d.]+)"/)?.[1] ?? 12)
+      const text = raw.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+      const right = x + textWidth(text, size)
+      const where = `${label}#${n}`
+      if (right > vbw + 0.5) {
+        out.push(`${where}: "${text}" runs to ${right.toFixed(0)}, past the ${vbw} viewBox`)
+        continue
+      }
+      // The enclosing box, if this label sits in one rather than in the backdrop.
+      const host = rects.find((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h && r.w < vbw * 0.98)
+      if (host && right > host.x + host.w - 2) {
+        out.push(`${where}: "${text}" runs to ${right.toFixed(0)}, past its box at ${(host.x + host.w).toFixed(0)}`)
+      }
+    }
+  })
+  return out
+}
+
+const box = (/** @type {string} */ title, /** @type {string[]} */ lines) => ({ title, lines })
+
+export const STRESS = {
+  'layers: one row mixes a very wide box with narrow ones': {
+    kind: 'layers',
+    boundary: { after: 0, label: 'a boundary label long enough to need its own backing plate' },
+    layers: [
+      { label: 'TOP', boxes: [box('a', ['short']), box('b', ['a description that is very considerably longer than an even share of this row'])] },
+      { boxes: [box('sole-occupant-of-the-row-with-a-long-name', ['and a second line that also runs long enough to matter'])] },
+    ],
+  },
+  'pipeline: seven stages, the last the widest': {
+    kind: 'pipeline',
+    stages: [
+      box('one', ['x']), box('two', ['x']), box('three', ['x']), box('four', ['x']),
+      box('five', ['x']), box('six', ['x']),
+      box('seven-is-the-longest', ['and carries the longest line of all of them']),
+    ],
+    outputs: { label: 'OUT', boxes: [box('first-output-path/', ['a']), box('b/', ['b'])] },
+  },
+  'inventory: long names and long notes in every column': {
+    kind: 'inventory',
+    label: 'a container whose label is itself quite long',
+    sublabel: 'and a sublabel that is longer still, to push the header out',
+    columns: 5,
+    items: Array.from({ length: 11 }, (_, i) => ({
+      name: `member_number_${i}`,
+      note: i % 3 === 0 ? 'with an explanatory note attached' : undefined,
+      accent: i === 4 ? 'bad' : undefined,
+    })),
+  },
+  'containment: three levels, long names at the deepest': {
+    kind: 'containment',
+    columns: 2,
+    groups: [
+      {
+        title: 'a top-level group whose title is long',
+        sublabel: 'and a sublabel that is longer than the title above it',
+        columns: 1,
+        groups: [
+          { title: 'nested', items: Array.from({ length: 7 }, (_, i) => ({ name: `a_rather_long_member_name_${i}` })) },
+          { title: 'nested with notes', accent: 'bad', items: [{ name: 'one', note: 'carrying a note long enough to double the cell' }] },
+        ],
+      },
+      { title: 'sibling', columns: 2, groups: [{ title: 'x', items: [{ name: 'y' }] }, { title: 'z', items: [{ name: 'w' }] }] },
+    ],
+  },
+}
+
+/** The renderer and the published schema must agree on what a payload may say. */
+export function contractDrift() {
+  const schema = JSON.parse(readFileSync(join(SKILL, 'map-page.schema.json'), 'utf8'))
+  const declared = schema.$defs.diagram.oneOf.map((/** @type {any} */ o) => o.properties.kind.const).sort()
+  const blocks = schema.$defs.block.oneOf.map((/** @type {any} */ o) => o.properties.type.const).sort()
+  const src = readFileSync(join(SKILL, 'render_map.mjs'), 'utf8')
+  const setOf = (/** @type {string} */ name) =>
+    [...src.match(new RegExp(`${name} = new Set\\(\\[([^\\]]+)\\]`))[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort()
+  const out = []
+  const cmp = (/** @type {string} */ what, /** @type {string[]} */ a, /** @type {string[]} */ b) => {
+    if (a.join() !== b.join()) out.push(`${what}: schema has [${a}], renderer has [${b}]`)
+  }
+  cmp('diagram kinds', declared, setOf('DIAGRAM_KINDS'))
+  cmp('block types', blocks, setOf('BLOCK_TYPES'))
+  // Every declared kind must also be rendered, not merely accepted.
+  const rendered = [...src.matchAll(/case '([a-z]+)': return render/g)].map((m) => m[1])
+  for (const k of declared) {
+    if (k !== 'raw' && !rendered.includes(k)) out.push(`diagram kind ${k} is in the schema but has no renderer`)
+  }
+  return out
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const files = process.argv.slice(2)
+  let problems = []
+  let checked = 0
+  if (files.length) {
+    for (const f of files) {
+      problems.push(...findOverflows(readFileSync(f, 'utf8'), f))
+      checked++
+    }
+  } else {
+    // Drift first: a renderer and schema that disagree make every later
+    // result meaningless, and the failure reads better on its own.
+    const drift = contractDrift()
+    if (drift.length) {
+      console.error(`DIAGRAM-CHECK fail ${drift.length} contract mismatches`)
+      for (const d of drift) console.error(`  ${d}`)
+      process.exit(1)
+    }
+    const { renderDiagram, validate } = await import(join(SKILL, 'render_map.mjs'))
+    for (const [name, diagram] of Object.entries(STRESS)) {
+      try {
+        validate({ title: 't', lede: 'l', sections: [{ heading: 'h', blocks: [{ type: 'figure', diagram }] }] })
+        problems.push(...findOverflows(renderDiagram(diagram), name))
+      } catch (e) {
+        problems.push(`${name}: ${/** @type {Error} */ (e).message.replace(/\n\s*/g, ' ')}`)
+      }
+      checked++
+    }
+  }
+  if (problems.length) {
+    console.error(`DIAGRAM-CHECK fail ${problems.length} problems`)
+    for (const p of problems) console.error(`  ${p}`)
+    process.exit(1)
+  }
+  console.error(`DIAGRAM-CHECK ok checked=${checked} no label overflows its box or the viewBox`)
+}

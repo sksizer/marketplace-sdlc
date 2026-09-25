@@ -1,7 +1,8 @@
 # A pull request whose base has already been merged into the default branch
 # merges into a dead end: GitHub reports it as merged, the work never reaches
-# the default branch, and nothing warns. This repository lost two skills that
-# way (#6 and #16).
+# the default branch, and nothing warns. This repository lost work that way five
+# times: the skills recovered by #16 and #6, and pull requests #11, #12 and #14,
+# whose renderer and schema never reached main despite all three showing merged.
 #
 # Two guards, because one is not enough:
 #   - pr-base runs on the pull request and refuses a base that is already
