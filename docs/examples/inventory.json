@@ -1,0 +1,77 @@
+{
+  "name": "inventory",
+  "caption": "A named container holding a roster. Two members are accented to mark them as the ones that carry the risk.",
+  "diagram": {
+    "kind": "inventory",
+    "label": "agent-adapt-core",
+    "sublabel": "21 modules, no I/O of its own",
+    "columns": 5,
+    "items": [
+      {
+        "name": "vault"
+      },
+      {
+        "name": "discover"
+      },
+      {
+        "name": "scan"
+      },
+      {
+        "name": "corpus"
+      },
+      {
+        "name": "frontmatter"
+      },
+      {
+        "name": "content"
+      },
+      {
+        "name": "compile"
+      },
+      {
+        "name": "skill"
+      },
+      {
+        "name": "projection"
+      },
+      {
+        "name": "manifest"
+      },
+      {
+        "name": "namespace"
+      },
+      {
+        "name": "semver"
+      },
+      {
+        "name": "export"
+      },
+      {
+        "name": "publish"
+      },
+      {
+        "name": "adopt"
+      },
+      {
+        "name": "authoring"
+      },
+      {
+        "name": "guard",
+        "accent": "bad"
+      },
+      {
+        "name": "status"
+      },
+      {
+        "name": "error"
+      },
+      {
+        "name": "vfs",
+        "accent": "bad"
+      },
+      {
+        "name": "compile"
+      }
+    ]
+  }
+}
