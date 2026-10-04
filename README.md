@@ -4,6 +4,9 @@ A marketplace of SDLC agent extensions — skills, commands, subagents, prompts,
 rules, and MCP server configuration — packaged for multiple coding-agent
 harnesses rather than a single vendor.
 
+Browse the plugins and skills at
+**[sksizer.github.io/marketplace-sdlc](https://sksizer.github.io/marketplace-sdlc/)**.
+
 The same capability (say, a task-planning workflow) is expressed once as a
 concept and distributed in whatever form each harness expects: a plugin for one,
 a rules file for another, a prompt directory for a third.
@@ -51,7 +54,8 @@ Per-harness install instructions land here as each one is wired up.
 
 ## Documentation site
 
-`site/` is an Astro Starlight site with a page for each plugin and skill,
+The [documentation site](https://sksizer.github.io/marketplace-sdlc/) has a
+page for each plugin and skill. It is an Astro Starlight site in `site/`,
 built from the committed `.claude-plugin/` tree and the plugin notes under
 `src/`. `.github/workflows/pages.yml` deploys it to GitHub Pages from `main`.
 To preview it locally:
