@@ -1,0 +1,64 @@
+{
+  "name": "pipeline",
+  "caption": "Five ordered stages, the last accented, fanning out to the three artifacts one pass produces.",
+  "diagram": {
+    "kind": "pipeline",
+    "stages": [
+      {
+        "title": "vault notes",
+        "lines": [
+          "src/marketplaces/\u2026"
+        ]
+      },
+      {
+        "title": "discover",
+        "lines": [
+          "kind, plugin, links"
+        ]
+      },
+      {
+        "title": "compile",
+        "lines": [
+          "expands ![[embed]]",
+          "recursively, in place"
+        ]
+      },
+      {
+        "title": "projection",
+        "lines": [
+          "per runtime, then hashed"
+        ]
+      },
+      {
+        "title": "export",
+        "lines": [
+          "stage, compare, swap"
+        ],
+        "accent": "good"
+      }
+    ],
+    "outputs": {
+      "label": "THREE RUNTIMES, ONE PASS",
+      "boxes": [
+        {
+          "title": ".claude-plugin/",
+          "lines": [
+            "Task \u00b7 SKILL.md"
+          ]
+        },
+        {
+          "title": ".agents/",
+          "lines": [
+            "spawn_agent \u00b7 read_file"
+          ]
+        },
+        {
+          "title": ".cursor-plugin/",
+          "lines": [
+            "Agent \u00b7 Shell"
+          ]
+        }
+      ]
+    }
+  }
+}

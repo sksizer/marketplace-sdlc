@@ -1,2 +1,6 @@
 dist/
 .astro/
+
+# Written by scripts/import-docs.mjs at build time; docs/ is the source.
+public/diagrams/
+src/content/docs/

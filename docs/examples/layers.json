@@ -1,0 +1,47 @@
+{
+  "name": "layers",
+  "caption": "Two tiers cut by a named boundary. The seam is the point: everything above it does I/O, everything below it cannot.",
+  "diagram": {
+    "kind": "layers",
+    "boundary": {
+      "after": 0,
+      "label": "the `Vfs` seam \u2014 trait object"
+    },
+    "layers": [
+      {
+        "label": "HOSTS \u2014 where I/O actually happens",
+        "boxes": [
+          {
+            "title": "agent-pants",
+            "lines": [
+              "the CLI \u00b7 15 verbs \u00b7 native fs"
+            ]
+          },
+          {
+            "title": "agent-adapt-wasm",
+            "lines": [
+              "Obsidian bridge \u00b7 js_vfs \u00b7 no fs"
+            ]
+          },
+          {
+            "title": "agent-adapt-typegen",
+            "lines": [
+              "emits TS types for the bridge"
+            ]
+          }
+        ]
+      },
+      {
+        "boxes": [
+          {
+            "title": "agent-adapt-core",
+            "lines": [
+              "21 modules \u00b7 arithmetic on strings and paths",
+              "compiles to wasm32 and stays pure"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
