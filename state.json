@@ -46,9 +46,9 @@
       "line": 32,
       "title": "retryUpload is a verbatim copy of withRetry",
       "comment": null,
-      "status": "open",
+      "status": "fixed",
       "reason": null,
-      "fixedIn": null
+      "fixedIn": "ac6e166"
     }
   ]
 }
