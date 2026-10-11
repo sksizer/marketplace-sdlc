@@ -4,7 +4,10 @@
   "head": "7cc83b3c4fbe13b8824c6065ecc036d5d70636e7",
   "base": "1da4d389797eeaef362ad069edb0bb5e01249448",
   "round": 1,
-  "claim": null,
+  "claim": {
+    "owner": "Mac.local:r2-45081",
+    "at": "2026-10-11T18:44:54.048Z"
+  },
   "findings": [
     {
       "id": "r1-1",
