@@ -69,8 +69,8 @@
       "round": 3,
       "path": "e2e/paths.ts",
       "line": 5,
-      "title": "uploadPath lets a name containing ../ escape the uploads directory",
-      "comment": null,
+      "title": "name is documented as user-supplied, but join(root, 'uploads', name) normalises .. segments, so uploadPath('/srv', '../…",
+      "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242910097",
       "status": "fixed",
       "reason": null,
       "fixedIn": "5e0a0459a25caada1a46e857496ef6eee64fbd12"
@@ -80,8 +80,8 @@
       "round": 3,
       "path": "e2e/paths.ts",
       "line": 13,
-      "title": "parsePairs stores malformed pairs instead of ignoring them",
-      "comment": null,
+      "title": "the doc says malformed pairs are ignored, but nothing ignores them. For \"a=1,b,c=x\" the part b gives v === undefined, s…",
+      "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242910100",
       "status": "declined",
       "reason": "sandbox helper; inputs are fixed constants, never user data",
       "fixedIn": null
