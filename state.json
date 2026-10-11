@@ -68,9 +68,9 @@
       "line": 5,
       "title": "uploadPath lets a name containing ../ escape the uploads directory",
       "comment": null,
-      "status": "open",
+      "status": "fixed",
       "reason": null,
-      "fixedIn": null
+      "fixedIn": "5e0a0459a25caada1a46e857496ef6eee64fbd12"
     },
     {
       "id": "r3-2",
