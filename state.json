@@ -14,29 +14,29 @@
       "round": 1,
       "path": "e2e/retry.ts",
       "line": 7,
-      "title": "Error paths: the doc says defaults are returned \"when it is missing\", but this bare `catch` also swallows a corrupt file (`JSON.parse` throws on a half-written config), a permission error and a directory path. Each returns `{ retries: 3, delayMs: 100 }` with no message, so a broken config silently changes behaviour. Catch the error and return defaults only for `ENOENT`; rethrow the rest. The parsed value is also returned unchecked as `{ retries, delayMs }`, so a file holding `{}` yields `undefined` for both.",
+      "title": "the doc says defaults are returned \"when it is missing\", but this bare catch also swallows a corrupt file (JSON.parse t…",
       "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242738879",
       "status": "fixed",
       "reason": null,
-      "fixedIn": "ac6e166b7ff251938822b1f187782150c2a2e845"
+      "fixedIn": "ac6e166"
     },
     {
       "id": "r1-2",
       "round": 1,
       "path": "e2e/retry.ts",
       "line": 15,
-      "title": "Correctness: `i <= retries` makes `retries + 1` attempts, but the doc says \"up to `retries` times\". `withRetry(fn, 0, ...)` still calls `fn` once, `withRetry(fn, 3, ...)` calls it four times. Also the `catch` sleeps `delayMs` after the final failed attempt before throwing, delaying the error for nothing. Use `i < retries` (or document the count as retries after the first try) and skip the sleep when `i` is the last iteration.",
+      "title": "i <= retries makes retries + 1 attempts, but the doc says \"up to retries times\". withRetry(fn, 0, ...) still calls fn o…",
       "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242738896",
       "status": "fixed",
       "reason": null,
-      "fixedIn": "ac6e166b7ff251938822b1f187782150c2a2e845"
+      "fixedIn": "ac6e166"
     },
     {
       "id": "r1-3",
       "round": 1,
       "path": "e2e/retry.ts",
-      "line": 38,
-      "title": "Error paths: `writeFileSync` truncates the file and then writes, so a crash or full disk mid-write leaves a truncated config. The next `loadConfig` hits the swallowed parse error (line 7) and silently returns defaults, losing the saved values. Write to `path + '.tmp'` and `renameSync` it over `path`.",
+      "line": 28,
+      "title": "writeFileSync truncates the file and then writes, so a crash or full disk mid-write leaves a truncated config. The next…",
       "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242738905",
       "status": "declined",
       "reason": "sandbox helper; config is written once at setup, so a torn write is not a risk here",
@@ -47,19 +47,19 @@
       "round": 1,
       "path": "e2e/retry.ts",
       "line": 32,
-      "title": "Duplication: `retryUpload` is line for line the same as `withRetry` (line 13 to 24), same signature, loop and sleep. Only the name and doc differ, so the off-by-one on line 15 is copied here too (line 34). Delete it and have the uploader call `withRetry`, or export `retryUpload` as an alias if the name is wanted.",
+      "title": "retryUpload is line for line the same as withRetry (line 13 to 24), same signature, loop and sleep. Only the name and d…",
       "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242738912",
       "status": "fixed",
       "reason": null,
-      "fixedIn": "ac6e166b7ff251938822b1f187782150c2a2e845"
+      "fixedIn": "ac6e166"
     },
     {
       "id": "r2-1",
       "round": 2,
       "path": "e2e/retry.ts",
       "line": 16,
-      "title": "loadConfig silently replaces a wrongly typed retries/delayMs with the default",
-      "comment": null,
+      "title": "the doc says defaults are returned \"only when it is missing\", but a field of the wrong type is also replaced by its def…",
+      "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242754048",
       "status": "open",
       "reason": null,
       "fixedIn": null
