@@ -35,8 +35,8 @@
       "line": 28,
       "title": "saveConfig overwrites in place, so a crash leaves a truncated config",
       "comment": null,
-      "status": "open",
-      "reason": null,
+      "status": "declined",
+      "reason": "sandbox helper; config is written once at setup, so a torn write is not a risk here",
       "fixedIn": null
     },
     {
