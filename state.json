@@ -13,9 +13,9 @@
       "line": 7,
       "title": "loadConfig swallows every error, not just a missing file",
       "comment": null,
-      "status": "open",
+      "status": "fixed",
       "reason": null,
-      "fixedIn": null
+      "fixedIn": "ac6e166"
     },
     {
       "id": "r1-2",
