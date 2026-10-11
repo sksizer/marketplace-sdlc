@@ -1,12 +1,57 @@
 {
   "schema": 1,
   "pr": 32,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "7cc83b3c4fbe13b8824c6065ecc036d5d70636e7",
+  "base": "1da4d389797eeaef362ad069edb0bb5e01249448",
+  "round": 1,
   "claim": {
     "owner": "Mac.local:45750",
     "at": "2026-10-11T18:40:29.984Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": "e2e/retry.ts",
+      "line": 7,
+      "title": "loadConfig swallows every error, not just a missing file",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": "e2e/retry.ts",
+      "line": 15,
+      "title": "withRetry makes retries+1 attempts and sleeps after the last failure",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": "e2e/retry.ts",
+      "line": 28,
+      "title": "saveConfig overwrites in place, so a crash leaves a truncated config",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": "e2e/retry.ts",
+      "line": 32,
+      "title": "retryUpload is a verbatim copy of withRetry",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
