@@ -24,9 +24,9 @@
       "line": 15,
       "title": "withRetry makes retries+1 attempts and sleeps after the last failure",
       "comment": null,
-      "status": "open",
+      "status": "fixed",
       "reason": null,
-      "fixedIn": null
+      "fixedIn": "ac6e166"
     },
     {
       "id": "r1-3",
