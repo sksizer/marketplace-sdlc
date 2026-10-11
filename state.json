@@ -79,8 +79,8 @@
       "line": 13,
       "title": "parsePairs stores malformed pairs instead of ignoring them",
       "comment": null,
-      "status": "open",
-      "reason": null,
+      "status": "declined",
+      "reason": "sandbox helper; inputs are fixed constants, never user data",
       "fixedIn": null
     }
   ]
