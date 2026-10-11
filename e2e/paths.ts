@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { resolve, sep } from 'node:path'
 
-/** Join a user-supplied name under the uploads directory. */
+/** Join a user-supplied name under the uploads directory; throws when the name escapes it. */
 export function uploadPath(root: string, name: string): string {
-  return join(root, 'uploads', name)
+  const base = resolve(root, 'uploads')
+  const full = resolve(base, name)
+  if (!full.startsWith(base + sep)) throw new Error(`${name}: outside the uploads directory`)
+  return full
 }
 
 /** Parse "a=1,b=2" into a map; ignores malformed pairs. */

@@ -13,9 +13,17 @@ export function loadConfig(path: string): { retries: number; delayMs: number } {
   }
   const parsed = JSON.parse(text)
   return {
-    retries: typeof parsed?.retries === 'number' ? parsed.retries : DEFAULTS.retries,
-    delayMs: typeof parsed?.delayMs === 'number' ? parsed.delayMs : DEFAULTS.delayMs,
+    retries: numberField(path, parsed, 'retries', DEFAULTS.retries),
+    delayMs: numberField(path, parsed, 'delayMs', DEFAULTS.delayMs),
   }
+}
+
+/** Read `key` from the parsed config: the default when absent, an error when present but not a number. */
+function numberField(path: string, parsed: any, key: 'retries' | 'delayMs', fallback: number): number {
+  const value = parsed?.[key]
+  if (value === undefined) return fallback
+  if (typeof value !== 'number') throw new Error(`${path}: ${key} must be a number`)
+  return value
 }
 
 /** Run fn up to `retries` times, waiting delayMs between attempts. */
