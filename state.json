@@ -57,9 +57,9 @@
       "line": 16,
       "title": "the doc says defaults are returned \"only when it is missing\", but a field of the wrong type is also replaced by its def…",
       "comment": "https://github.com/sksizer/marketplace-sdlc/pull/32#discussion_r4242754048",
-      "status": "open",
+      "status": "fixed",
       "reason": null,
-      "fixedIn": null
+      "fixedIn": "5e0a0459a25caada1a46e857496ef6eee64fbd12"
     },
     {
       "id": "r3-1",
